@@ -427,18 +427,15 @@ public class ReadActivity extends BaseActivity implements SpeechSynthesizerListe
     }
 
     private void addBookmark() {
-        if (pageFactory.getCurrentPage() != null) {
-            List<BookMark> bookMarkList = LitePal.where("bookPath = ? and begin = ?", pageFactory.getBookPath(), pageFactory.getCurrentPage().getBegin() + "").find(BookMark.class);
-
-            if (!bookMarkList.isEmpty()) {
-                Toast.makeText(ReadActivity.this, "该书签已存在", Toast.LENGTH_SHORT).show();
-            } else {
-
-            }
-        }
-    }
-
-    private void startTtsReadBook() {
+//        if (pageFactory.getCurrentPage() != null) {
+//            List<BookMark> bookMarkList = LitePal.where("bookPath = ? and begin = ?", pageFactory.getBookPath(), pageFactory.getCurrentPage().getBegin() + "").find(BookMark.class);
+//
+//            if (!bookMarkList.isEmpty()) {
+//                Toast.makeText(ReadActivity.this, "该书签已存在", Toast.LENGTH_SHORT).show();
+//            } else {
+//
+//            }
+//        }
         BookMark bookMark = new BookMark();
         String word = "";
         for (String line : pageFactory.getCurrentPage().getLines()) {
@@ -460,6 +457,9 @@ public class ReadActivity extends BaseActivity implements SpeechSynthesizerListe
         } catch (Exception e) {
             Toast.makeText(ReadActivity.this, "添加书签失败", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void startTtsReadBook() {
 
         if (mSpeechSynthesizer != null) {
             wholePageStr = pageFactory.getCurrentPage().getWholePageStr();

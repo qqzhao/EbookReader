@@ -69,6 +69,8 @@ public class DocumentActivity extends Activity {
     private ImageButton mOutlineButton;
     private ViewAnimator mTopBarSwitcher;
     private ImageButton mLinkButton;
+
+    private ImageButton mBackButton;
     private TopBarMode mTopBarMode = TopBarMode.Main;
     private ImageButton mSearchBack;
     private ImageButton mSearchFwd;
@@ -425,6 +427,12 @@ public class DocumentActivity extends Activity {
             }
         });
 
+        mBackButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                finish();
+            }
+        });
+
         if (core.isReflowable()) {
             mLayoutButton.setVisibility(View.VISIBLE);
             mLayoutPopupMenu = new PopupMenu(this, mLayoutButton);
@@ -700,6 +708,7 @@ public class DocumentActivity extends Activity {
         mSearchClose = (ImageButton) mButtonsView.findViewById(R.id.searchClose);
         mSearchText = (EditText) mButtonsView.findViewById(R.id.searchText);
         mLinkButton = (ImageButton) mButtonsView.findViewById(R.id.linkButton);
+        mBackButton = (ImageButton) mButtonsView.findViewById(R.id.backButton);
         mLayoutButton = mButtonsView.findViewById(R.id.layoutButton);
         mTopBarSwitcher.setVisibility(View.INVISIBLE);
         mPageNumberView.setVisibility(View.INVISIBLE);

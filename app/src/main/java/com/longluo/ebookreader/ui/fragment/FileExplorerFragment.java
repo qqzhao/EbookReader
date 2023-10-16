@@ -71,6 +71,8 @@ public class FileExplorerFragment extends TitleBarFragment<HomeActivity> {
     private List<BookMeta> bookMetas;
     private long sizeLimit = 1024 * 1024 * 1024;
 
+    private boolean registerReceiverSuccess = false;
+
     private String[] chooseFileType = {".txt", ".epub", ".mobi", ".azw", ".azw3", ".pdf", ".doc", ".docx"};
 
     private class HistoryEntry {
@@ -184,8 +186,10 @@ public class FileExplorerFragment extends TitleBarFragment<HomeActivity> {
 
     @Override
     protected void initData() {
+        Log.d("FileExplorer: initData", "registerReceiver");
         registerReceiver();
         requestPermission();
+        registerReceiverSuccess = true;
 
         mBtnChooseAll.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -280,7 +284,10 @@ public class FileExplorerFragment extends TitleBarFragment<HomeActivity> {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        getActivity().unregisterReceiver(receiver);
+        Log.d("FileExplorer: onDestroy", "unregisterReceiver");
+        if (registerReceiverSuccess) {
+            getActivity().unregisterReceiver(receiver);
+        }
     }
 
     private void registerReceiver() {

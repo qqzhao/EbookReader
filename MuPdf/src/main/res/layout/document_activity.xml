@@ -17,6 +17,12 @@
             android:background="@color/toolbar"
             android:orientation="horizontal">
 
+			<ImageButton
+				android:id="@+id/backButton"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:background="@drawable/button"
+				android:src="@drawable/ic_close_white_24dp" />
             <TextView
                 android:id="@+id/docNameText"
                 android:layout_width="0dp"

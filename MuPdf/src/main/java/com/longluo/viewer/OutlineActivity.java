@@ -1,11 +1,16 @@
 package com.longluo.viewer;
 
 import android.app.ListActivity;
+import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import java.io.Serializable;
@@ -40,19 +45,47 @@ public class OutlineActivity extends ListActivity {
         int currentPage = bundle.getInt("POSITION");
         ArrayList<Item> outline = (ArrayList<Item>) bundle.getSerializable("OUTLINE");
         int found = -1;
+        adapter.add(new Item("返回上一级", 999));
         for (int i = 0; i < outline.size(); ++i) {
             Item item = outline.get(i);
             if (found < 0 && item.page >= currentPage)
                 found = i;
             adapter.add(item);
         }
-        if (found >= 0)
-            setSelection(found);
+        if (found >= 0) {
+//            requestFocusFromTouch();
+            ListView mListView = getListView();
+
+//            mListView.notifyAll();
+            mListView.requestFocusFromTouch();
+            mListView.setSelection(found);
+
+            mListView.clearFocus();
+            int finalFound = found;
+            mListView.post(new Runnable() {
+                @Override
+                public void run() {
+                    mListView.setSelection(finalFound);
+                }
+            });
+//            setSelection(found);
+        }
+
+        Log.d("", String.format("found = %s", found));
     }
 
     protected void onListItemClick(ListView l, View v, int position, long id) {
+        if (position == 0) {
+            finish();
+            return;
+        }
         Item item = adapter.getItem(position);
         setResult(RESULT_FIRST_USER + item.page);
         finish();
+    }
+
+    @Override
+    public void setSelection(int position) {
+        super.setSelection(position);
     }
 }

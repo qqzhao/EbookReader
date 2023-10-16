@@ -21,6 +21,7 @@
             android:drawableBottom="@mipmap/cover_type_txt"
             android:padding="10dp"
             android:text=""
+            android:textSize="12dp"
             android:textColor="@color/read_textColor" />
 
     </LinearLayout>

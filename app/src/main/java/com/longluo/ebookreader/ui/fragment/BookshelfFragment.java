@@ -59,6 +59,12 @@ public class BookshelfFragment extends TitleBarFragment<HomeActivity> {
         initListener();
     }
 
+    public void refreshData() {
+        mBooks = LitePal.findAll(BookMeta.class);
+        mBookshelfAdapter.setBookLists(mBooks);
+        mBookshelfAdapter.notifyDataSetChanged();
+    }
+
     private void initListener() {
         mBookshelfAdapter.setOnItemClickListener(new BookshelfAdapter.OnItemClickListener() {
             @Override

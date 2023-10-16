@@ -1,5 +1,6 @@
 package com.longluo.ebookreader.ui.fragment;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -316,7 +317,14 @@ public class FileExplorerFragment extends TitleBarFragment<HomeActivity> {
                 bookMetas.add(bookMeta);
             }
 
-            SaveBookToSqlLiteTask mSaveBookToSqlLiteTask = new SaveBookToSqlLiteTask();
+            @SuppressLint("StaticFieldLeak") SaveBookToSqlLiteTask mSaveBookToSqlLiteTask = new SaveBookToSqlLiteTask() {
+                @Override
+                protected void onPostExecute(Integer result) {
+                    HomeActivity homeActivity = (HomeActivity) getActivity();
+                    homeActivity.refreshBookShelf();
+                    super.onPostExecute(result);
+                }
+            };
             mSaveBookToSqlLiteTask.execute(bookMetas);
         }
     }

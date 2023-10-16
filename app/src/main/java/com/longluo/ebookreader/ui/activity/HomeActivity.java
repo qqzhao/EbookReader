@@ -38,6 +38,8 @@ public final class HomeActivity extends AppActivity
     private NavigationAdapter mNavigationAdapter;
     private FragmentPagerAdapter<AppFragment<?>> mPagerAdapter;
 
+    private BookshelfFragment bookshelfFragment;
+
     public static void start(Context context) {
         start(context, BookshelfFragment.class);
     }
@@ -75,7 +77,10 @@ public final class HomeActivity extends AppActivity
     @Override
     protected void initData() {
         mPagerAdapter = new FragmentPagerAdapter<AppFragment<?>>(this);
-        mPagerAdapter.addFragment(BookshelfFragment.newInstance());
+
+        bookshelfFragment = BookshelfFragment.newInstance();
+        mPagerAdapter.addFragment(bookshelfFragment);
+
         mPagerAdapter.addFragment(FileExplorerFragment.newInstance());
         mPagerAdapter.addFragment(MineFragment.newInstance());
         mViewPager.setAdapter(mPagerAdapter);
@@ -169,5 +174,9 @@ public final class HomeActivity extends AppActivity
         mViewPager.setAdapter(null);
         mNavigationView.setAdapter(null);
         mNavigationAdapter.setOnNavigationListener(null);
+    }
+
+    public void refreshBookShelf() {
+        bookshelfFragment.refreshData();
     }
 }

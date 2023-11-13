@@ -6,6 +6,9 @@ apply from: 'configs.gradle'
 buildscript {
     // 导入通用的 Maven 库配置
     apply from: 'maven.gradle'
+    ext {
+        kotlin_version = '1.9.0'
+    }
 
     repositories {
         // 阿里云云效仓库（Gradle 插件）：https://maven.aliyun.com/mvn/guide
@@ -15,6 +18,7 @@ buildscript {
         maven { url 'https://repo1.maven.org/maven2/' }
 
         addCommonMaven(repositories)
+        mavenCentral()
     }
 
     // Studio 插件推荐：https://github.com/getActivity/StudioPlugins
@@ -29,6 +33,7 @@ buildscript {
 
         // AOP 配置插件：https://github.com/HujiangTechnology/gradle_plugin_android_aspectjx
         classpath 'com.hujiang.aspectjx:gradle-android-plugin-aspectjx:2.0.10'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -41,6 +46,7 @@ allprojects {
         maven { url 'https://repo1.maven.org/maven2' }
 
         addCommonMaven(repositories)
+        mavenCentral()
     }
 
     tasks.withType(JavaCompile) {

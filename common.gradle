@@ -1,14 +1,14 @@
 // 通用配置
 android {
     // 编译源码版本
-    compileSdkVersion 30
+    compileSdkVersion 32
     buildToolsVersion '30.0.2'
 
     defaultConfig {
         // 最低安装版本
         minSdkVersion 21
         // 目标适配版本
-        targetSdkVersion 28
+        targetSdkVersion 32
 
         versionCode 32
         versionName '7.0'

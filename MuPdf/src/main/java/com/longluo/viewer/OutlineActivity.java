@@ -45,7 +45,7 @@ public class OutlineActivity extends ListActivity {
         int currentPage = bundle.getInt("POSITION");
         ArrayList<Item> outline = (ArrayList<Item>) bundle.getSerializable("OUTLINE");
         int found = -1;
-        adapter.add(new Item("返回上一级", 999));
+//        adapter.add(new Item("返回上一级", 999));
         for (int i = 0; i < outline.size(); ++i) {
             Item item = outline.get(i);
             if (found < 0 && item.page >= currentPage)
@@ -75,10 +75,10 @@ public class OutlineActivity extends ListActivity {
     }
 
     protected void onListItemClick(ListView l, View v, int position, long id) {
-        if (position == 0) {
-            finish();
-            return;
-        }
+//        if (position == 0) {
+//            finish();
+//            return;
+//        }
         Item item = adapter.getItem(position);
         setResult(RESULT_FIRST_USER + item.page);
         finish();

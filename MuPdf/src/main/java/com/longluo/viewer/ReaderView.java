@@ -137,17 +137,17 @@ public class ReaderView
         }
     }
 
-    public void moveToNext() {
-        View v = mChildViews.get(mCurrent + 1);
-        if (v != null)
-            slideViewOntoScreen(v);
-    }
-
-    public void moveToPrevious() {
-        View v = mChildViews.get(mCurrent - 1);
-        if (v != null)
-            slideViewOntoScreen(v);
-    }
+//    public void moveToNext() {
+//        View v = mChildViews.get(mCurrent + 1);
+//        if (v != null)
+//            slideViewOntoScreen(v);
+//    }
+//
+//    public void moveToPrevious() {
+//        View v = mChildViews.get(mCurrent - 1);
+//        if (v != null)
+//            slideViewOntoScreen(v);
+//    }
 
     // When advancing down the page, we want to advance by about
     // 90% of a screenful. But we'd be happy to advance by between
@@ -581,6 +581,7 @@ public class ReaderView
         }
     }
 
+    // 处理滑动翻页
     private void onLayout2(boolean changed, int left, int top, int right,
                            int bottom) {
 
@@ -597,10 +598,12 @@ public class ReaderView
             if (cv != null) {
                 boolean move;
                 cvOffset = subScreenSizeOffset(cv);
+                int minWidthDistance = (getWidth() / 8); // 最小滑动距离
+
                 // cv.getRight() may be out of date with the current scale
                 // so add left to the measured width for the correct position
                 if (HORIZONTAL_SCROLLING)
-                    move = cv.getLeft() + cv.getMeasuredWidth() + cvOffset.x + GAP / 2 + mXScroll < getWidth() / 2;
+                    move = cv.getLeft() + cv.getMeasuredWidth() + cvOffset.x + GAP / 2 + mXScroll < minWidthDistance;
                 else
                     move = cv.getTop() + cv.getMeasuredHeight() + cvOffset.y + GAP / 2 + mYScroll < getHeight() / 2;
                 if (move && mCurrent + 1 < mAdapter.getCount()) {
@@ -613,9 +616,8 @@ public class ReaderView
                     mCurrent++;
                     onMoveToChild(mCurrent);
                 }
-
                 if (HORIZONTAL_SCROLLING)
-                    move = cv.getLeft() - cvOffset.x - GAP / 2 + mXScroll >= getWidth() / 2;
+                    move = cv.getLeft() - cvOffset.x - GAP / 2 + mXScroll >= minWidthDistance;
                 else
                     move = cv.getTop() - cvOffset.y - GAP / 2 + mYScroll >= getHeight() / 2;
                 if (move && mCurrent > 0) {
@@ -911,23 +913,39 @@ public class ReaderView
         invalidate();
     }
 
+    /// 处理点击翻页，以及回到主doc
+    /// 修改逻辑，不能处理跳转才会处理翻页。移除Y轴的处理。
     public boolean onSingleTapUp(MotionEvent e) {
         Link link = null;
-        if (!tapDisabled) {
-            PageView pageView = (PageView) getDisplayedView();
-            if (mLinksEnabled && pageView != null) {
-                int page = pageView.hitLink(e.getX(), e.getY());
-                if (page > 0) {
-                    pushHistory();
-                    setDisplayedViewIndex(page);
-                }
+//        if (!tapDisabled) {
+//            PageView pageView = (PageView) getDisplayedView();
+//            if (mLinksEnabled && pageView != null) {
+//                int page = pageView.hitLink(e.getX(), e.getY());
+//                if (page > 0) {
+//                    pushHistory();
+//                    setDisplayedViewIndex(page);
+//                }
+//            } else if (e.getX() < tapPageMargin) {
+//                smartMoveBackwards();
+//            } else if (e.getX() > super.getWidth() - tapPageMargin) {
+//                smartMoveForwards();
+//            } else if (e.getY() < tapPageMargin) {
+//                smartMoveBackwards();
+//            } else if (e.getY() > super.getHeight() - tapPageMargin) {
+//                smartMoveForwards();
+//            } else {
+//                onTapMainDocArea();
+//            }
+//        }
+        PageView pageView = (PageView) getDisplayedView();
+        if (pageView != null) {
+            int page = pageView.hitLink(e.getX(), e.getY());
+            if (page > 0) {
+                pushHistory();
+                setDisplayedViewIndex(page);
             } else if (e.getX() < tapPageMargin) {
                 smartMoveBackwards();
             } else if (e.getX() > super.getWidth() - tapPageMargin) {
-                smartMoveForwards();
-            } else if (e.getY() < tapPageMargin) {
-                smartMoveBackwards();
-            } else if (e.getY() > super.getHeight() - tapPageMargin) {
                 smartMoveForwards();
             } else {
                 onTapMainDocArea();

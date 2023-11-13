@@ -14,7 +14,7 @@ public class Tab {
     private String name;
     private Bitmap icon;
     private int unreadNum;
-    private int maxUnreadNum = 999;
+    private int maxUnreadNum = 9999;
     private Bitmap focusIcon;
     
     public Tab(@Nullable Context context, @Nullable String name, @DrawableRes int resId) {

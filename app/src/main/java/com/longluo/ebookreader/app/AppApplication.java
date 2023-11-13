@@ -27,7 +27,7 @@ import com.longluo.ebookreader.other.ToastStyle;
 import com.tencent.bugly.crashreport.CrashReport;
 import com.tencent.mmkv.MMKV;
 
-import io.github.longluo.droidlib.umeng.UmengClient;
+//import io.github.longluo.droidlib.umeng.UmengClient;
 import timber.log.Timber;
 
 /**
@@ -78,8 +78,8 @@ public final class AppApplication extends Application {
         // 本地异常捕捉
         CrashHandler.register(application);
 
-        // 友盟统计、登录、分享 SDK
-        UmengClient.init(application, AppConfig.isLogEnable());
+//        // 友盟统计、登录、分享 SDK
+//        UmengClient.init(application, AppConfig.isLogEnable());
 
         // Bugly 异常捕捉
         CrashReport.initCrashReport(application, AppConfig.getBuglyId(), AppConfig.isDebug());

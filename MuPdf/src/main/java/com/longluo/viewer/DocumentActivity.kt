@@ -65,9 +65,12 @@ class DocumentActivity : Activity() {
     private val mAlertDialog: AlertDialog? = null
     private var mFlatOutline: ArrayList<OutlineActivity.Item>? = null
     protected var mDisplayDPI = 0
-    private var mLayoutEM = 10
+
+    private var mLayoutEM = 10 // 字体大小
     private var mLayoutW = 312
     private var mLayoutH = 504
+    private var lastPageNum = 0 // 上次看到的页数
+
     protected var mLayoutButton: View? = null
     protected var mLayoutPopupMenu: PopupMenu? = null
     private fun toHex(digest: ByteArray): String {
@@ -160,15 +163,8 @@ class DocumentActivity : Activity() {
                         val reason = e.toString()
                         val res = resources
                         val alert = mAlertBuilder!!.create()
-                        var text = "${Locale.ROOT}${res.getString(R.string.cannot_open_document_Reason)}$reason";
+                        val text = "${Locale.ROOT}${res.getString(R.string.cannot_open_document_Reason)}$reason";
                         setTitle(text);
-//                        setTitle(
-//                            String.format(
-//                                Locale.ROOT,
-//                                ,
-//                                reason
-//                            )
-//                        )
                         alert.setButton(
                             AlertDialog.BUTTON_POSITIVE, getString(R.string.dismiss)
                         ) { dialog, which -> finish() }
@@ -230,6 +226,31 @@ class DocumentActivity : Activity() {
         mDocView!!.displayedViewIndex = loc
     }
 
+    private val pageStoreKey get() = "page$mFileKey"
+    private val pageFontSizeStoreKey get() = "font_size_$mFileKey"
+    private fun storePref() {
+        if (mFileKey != null && mDocView != null) {
+            val prefs = getPreferences(MODE_PRIVATE)
+            val edit = prefs.edit()
+            edit.putInt(pageStoreKey, mDocView!!.displayedViewIndex)
+            edit.putInt(pageFontSizeStoreKey, mLayoutEM)
+            edit.apply()
+        }
+    }
+
+    private fun restorePref() {
+        val prefs = getPreferences(MODE_PRIVATE)
+        mLayoutEM = prefs.getInt(pageFontSizeStoreKey, 10);
+        lastPageNum = prefs.getInt(pageStoreKey, 0);
+//        mDocView!!.setDisplayedViewIndex(lastPageNum)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (mSearchTask != null) mSearchTask!!.stop()
+        storePref()
+    }
+
     fun createUI(savedInstanceState: Bundle?) {
         if (core == null) return
 
@@ -238,16 +259,8 @@ class DocumentActivity : Activity() {
         mDocView = object : ReaderView(this) {
             override fun onMoveToChild(i: Int) {
                 if (core == null) return
-                var text = "${Locale.ROOT}${i+1} / ${core!!.countPages()}"
+                val text = "${Locale.ROOT}${i+1} / ${core!!.countPages()}"
                 mPageNumberView?.text = text
-//                mPageNumberView!!.setText(
-//                    String.format(
-//                        Locale.ROOT,
-//                        "%d / %d",
-//                        i + 1,
-//                        core!!.countPages()
-//                    )
-//                )
                 mPageSlider!!.max = (core!!.countPages() - 1) * mPageSliderRes
                 mPageSlider!!.progress = i * mPageSliderRes
                 super.onMoveToChild(i)
@@ -270,6 +283,7 @@ class DocumentActivity : Activity() {
                     mLayoutW = w * 72 / mDisplayDPI
                     mLayoutH = h * 72 / mDisplayDPI
                     relayoutDocument()
+                    mDocView!!.displayedViewIndex = lastPageNum
                 } else {
                     refresh()
                 }
@@ -343,6 +357,7 @@ class DocumentActivity : Activity() {
                 s: CharSequence, start: Int, count: Int,
                 after: Int
             ) {
+
             }
 
             override fun onTextChanged(
@@ -409,8 +424,7 @@ class DocumentActivity : Activity() {
         }
 
         // Reenstate last state if it was recorded
-        val prefs = getPreferences(MODE_PRIVATE)
-        mDocView!!.setDisplayedViewIndex(prefs.getInt("page$mFileKey", 0))
+        restorePref()
         if (savedInstanceState == null || !savedInstanceState.getBoolean(
                 "ButtonsHidden",
                 false
@@ -440,33 +454,17 @@ class DocumentActivity : Activity() {
         super.onActivityResult(requestCode, resultCode, data)
     }
 
+
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         if (mFileKey != null && mDocView != null) {
             if (mFileName != null) outState.putString("FileName", mFileName)
 
-            // Store current page in the prefs against the file name,
-            // so that we can pick it up each time the file is loaded
-            // Other info is needed only for screen-orientation change,
-            // so it can go in the bundle
-            val prefs = getPreferences(MODE_PRIVATE)
-            val edit = prefs.edit()
-            edit.putInt("page$mFileKey", mDocView!!.displayedViewIndex)
-            edit.apply()
+            storePref()
         }
         if (!mButtonsVisible) outState.putBoolean("ButtonsHidden", true)
         if (mTopBarMode == TopBarMode.Search) outState.putBoolean("SearchMode", true)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        if (mSearchTask != null) mSearchTask!!.stop()
-        if (mFileKey != null && mDocView != null) {
-            val prefs = getPreferences(MODE_PRIVATE)
-            val edit = prefs.edit()
-            edit.putInt("page$mFileKey", mDocView!!.displayedViewIndex)
-            edit.apply()
-        }
     }
 
     public override fun onDestroy() {

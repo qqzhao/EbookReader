@@ -3,6 +3,7 @@ plugins {
     id 'com.jakewharton.butterknife'
     id 'org.greenrobot.greendao'
     id 'android-aspectjx'
+    id 'org.jetbrains.kotlin.android'
 }
 
 apply from: '../common.gradle'
@@ -267,6 +268,7 @@ dependencies {
 
     // OpenCC to convert Simp. Chinese to Trad. Chinese
     implementation 'com.github.qichuan:android-opencc:1.2.0'
+    implementation 'androidx.core:core-ktx:1.0.1'
 
     //implementation 'com.google.android.gms:play-services-ads:20.5.0'
 

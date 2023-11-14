@@ -50,7 +50,7 @@ public class BookshelfFragment extends TitleBarFragment<HomeActivity> {
         mBooks = LitePal.findAll(BookMeta.class);
 
         mBookshelfAdapter = new BookshelfAdapter(getActivity(), mBooks);
-        mBookshelf.setLayoutManager(new GridLayoutManager(getActivity(), 3));
+        mBookshelf.setLayoutManager(new GridLayoutManager(getActivity(), 4));
         mBookshelf.setAdapter(mBookshelfAdapter);
         mBookshelf.addItemDecoration(new DividerItemDecoration(getActivity()));
 

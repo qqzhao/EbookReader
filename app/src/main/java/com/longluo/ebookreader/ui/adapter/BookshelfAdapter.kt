@@ -1,90 +1,78 @@
-package com.longluo.ebookreader.ui.adapter;
+package com.longluo.ebookreader.ui.adapter
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.annotation.SuppressLint
+import android.content.Context
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import com.longluo.ebookreader.R
+import com.longluo.ebookreader.db.BookMeta
+import com.longluo.ebookreader.ui.adapter.view.BookshelfViewHolder
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+class BookshelfAdapter(private val mContext: Context, private var mBookList: List<BookMeta>) :
+    RecyclerView.Adapter<BookshelfViewHolder>() {
+    private var listener: OnItemClickListener? = null
+    private var longClickListener: OnItemLongClickListener? = null
 
-import com.longluo.ebookreader.R;
-import com.longluo.ebookreader.db.BookMeta;
-import com.longluo.ebookreader.ui.adapter.view.BookshelfViewHolder;
-
-import java.util.List;
-
-
-public class BookshelfAdapter extends RecyclerView.Adapter<BookshelfViewHolder> {
-    private Context mContext;
-    private List<BookMeta> mBookList;
-
-    private OnItemClickListener listener;
-    private OnItemLongClickListener longClickListener;
-
-    public interface OnItemClickListener {
-        void onClick(int position);
+    interface OnItemClickListener {
+        fun onClick(position: Int)
     }
 
-    public interface OnItemLongClickListener {
-        void onClick(int position);
+    interface OnItemLongClickListener {
+        fun onClick(position: Int)
     }
 
-    public void setOnItemClickListener(OnItemClickListener listener) {
-        this.listener = listener;
+    fun setOnItemClickListener(listener: OnItemClickListener?) {
+        this.listener = listener
     }
 
-    public void setOnItemLongClickListener(OnItemLongClickListener longClickListener) {
-        this.longClickListener = longClickListener;
+    fun setOnItemLongClickListener(longClickListener: OnItemLongClickListener?) {
+        this.longClickListener = longClickListener
     }
 
-    public BookshelfAdapter(Context context, List<BookMeta> mBookList) {
-        this.mContext = context;
-        this.mBookList = mBookList;
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int
+    ): BookshelfViewHolder {
+        val view =
+            LayoutInflater.from(mContext).inflate(R.layout.layout_shelf_item, parent, false)
+        return BookshelfViewHolder(view)
     }
 
-    @Override
-    public BookshelfViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(mContext).inflate(R.layout.layout_shelf_item, parent, false);
-        BookshelfViewHolder holder = new BookshelfViewHolder(view);
-        return holder;
-    }
-
-    @Override
-    public void onBindViewHolder(@NonNull BookshelfViewHolder holder, @SuppressLint("RecyclerView") int position) {
-        holder.tvBookName.setText(mBookList.get(position).getBookName());
-
-        holder.itemView.setOnClickListener(v -> {
+    override fun onBindViewHolder(
+        holder: BookshelfViewHolder,
+        @SuppressLint("RecyclerView") position: Int
+    ) {
+        val item = mBookList[position];
+        holder.tvBookName.text = item.bookName
+        holder.tvBookType.text = item.bookPath.subSequence(item.bookPath.length-3, item.bookPath.length)
+        holder.itemView.setOnClickListener { v: View? ->
             if (listener != null) {
-                listener.onClick(position);
+                listener!!.onClick(position)
             }
-        });
-
-        holder.itemView.setOnLongClickListener(v -> {
+        }
+        holder.itemView.setOnLongClickListener { v: View? ->
             if (longClickListener != null) {
-                longClickListener.onClick(position);
+                longClickListener!!.onClick(position)
             }
-
-            return true;
-        });
+            true
+        }
     }
 
-    @Override
-    public int getItemCount() {
-        return mBookList.size();
+    override fun getItemCount(): Int {
+        return mBookList.size
     }
 
-    public Object getItem(int position) {
-        return mBookList.get(position);
+    fun getItem(position: Int): Any {
+        return mBookList[position]
     }
 
-    @Override
-    public long getItemId(int position) {
-        return position;
+    override fun getItemId(position: Int): Long {
+        return position.toLong()
     }
 
-    public void setBookLists(List<BookMeta> books) {
-        this.mBookList = books;
+    fun setBookLists(books: List<BookMeta>) {
+        mBookList = books
     }
 }

@@ -15,6 +15,9 @@ public class BookshelfViewHolder extends RecyclerView.ViewHolder {
     @BindView(R.id.tv_book_name)
     public TextView tvBookName;
 
+    @BindView(R.id.tv_book_type)
+    public TextView tvBookType;
+
     public BookshelfViewHolder(View view) {
         super(view);
         ButterKnife.bind(this, view);

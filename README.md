@@ -44,3 +44,8 @@ Or Scan the QRCode:
 
 2021.12.15 增加tts阅读支持;
 
+## fix 
+
+* 文件权限  [from](https://blog.csdn.net/weixin_45112340/article/details/128905213)
+* 
+

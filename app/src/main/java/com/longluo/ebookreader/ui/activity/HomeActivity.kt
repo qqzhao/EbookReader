@@ -1,9 +1,19 @@
 package com.longluo.ebookreader.ui.activity
 
+import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.Settings
+import android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
+import android.util.Log
+import android.widget.Toast
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
@@ -18,6 +28,7 @@ import com.longluo.ebookreader.ui.fragment.BookshelfFragment
 import com.longluo.ebookreader.ui.fragment.FileExplorerFragment
 import com.longluo.ebookreader.ui.fragment.MineFragment
 import io.github.longluo.base.FragmentPagerAdapter
+
 
 /**
  * 首页界面
@@ -56,6 +67,8 @@ class HomeActivity : AppActivity(), NavigationAdapter.OnNavigationListener {
         )
         mNavigationAdapter!!.setOnNavigationListener(this)
         mNavigationView?.setAdapter(mNavigationAdapter)
+
+        requestPermission()
     }
 
     override fun initData() {
@@ -139,6 +152,59 @@ class HomeActivity : AppActivity(), NavigationAdapter.OnNavigationListener {
 
     fun refreshBookShelf() {
         bookshelfFragment!!.refreshData()
+    }
+
+    private val REQUEST_PERMISSION_CODE = 1
+    private fun requestPermission() {
+//        val permission_read = ContextCompat.checkSelfPermission(
+//            this@HomeActivity,
+//            Manifest.permission.READ_EXTERNAL_STORAGE
+//        )
+//        if (permission_read != PackageManager.PERMISSION_GRANTED) {
+//            ActivityCompat.requestPermissions(
+//                this@HomeActivity,
+//                arrayOf<String>(Manifest.permission.READ_EXTERNAL_STORAGE),
+//                REQUEST_PERMISSION_CODE
+//            )
+//        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (Environment.isExternalStorageManager()) {
+                Toast.makeText(this, "已获得访问所有文件权限", Toast.LENGTH_SHORT).show()
+            } else {
+                val builder = AlertDialog.Builder(this)
+                    .setMessage("本程序需要您同意允许访问所有文件权限")
+                    .setPositiveButton("确定") { _, _ ->
+                        val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                        startActivity(intent)
+                    }
+                builder.show()
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_PERMISSION_CODE) {
+            if (resultCode == RESULT_OK) {
+                // 权限已授予
+                // 执行需要访问所有文件的操作
+            } else {
+                // 权限被拒绝
+                // 可以在此处向用户解释为什么需要该权限，并提供手动授权的方式
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        if (requestCode == REQUEST_PERMISSION_CODE) {
+            Log.i("TAG", "request permission success")
+        }
+        super.onRequestPermissionsResult(requestCode, permissions!!, grantResults!!)
     }
 
     companion object {

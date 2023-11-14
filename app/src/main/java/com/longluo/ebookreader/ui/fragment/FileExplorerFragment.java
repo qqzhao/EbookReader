@@ -69,7 +69,7 @@ public class FileExplorerFragment extends TitleBarFragment<HomeActivity> {
     private ArrayList<ListItem> checkItems = new ArrayList<ListItem>();
     private ArrayList<HistoryEntry> history = new ArrayList<HistoryEntry>();
     private List<BookMeta> bookMetas;
-    private long sizeLimit = 1024 * 1024 * 1024;
+    private long sizeLimit = 1024 * 1024 * 1024 * 1024;
 
     private boolean registerReceiverSuccess = false;
 
@@ -449,7 +449,7 @@ public class FileExplorerFragment extends TitleBarFragment<HomeActivity> {
             String extDevice = null;
             while ((line = reader.readLine()) != null) {
                 if ((!line.contains("/mnt") && !line.contains("/storage") && !line
-                        .contains("/sdcard"))
+                        .contains("/sdcard22"))
                         || line.contains("asec")
                         || line.contains("tmpfs") || line.contains("none")) {
                     continue;

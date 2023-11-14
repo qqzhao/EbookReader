@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">EbookReader</string>
+    <string name="app_name">E阅读器</string>
     <string name="action_settings">Settings</string>
 
     <string name="about_description">\u3000\u3000这是一款开源的阅读软件，你可以fork我们的代码自己编译APK。欢迎提交代码帮助改善应用。\n\u3000\u3000公众号[开源阅读]！</string>

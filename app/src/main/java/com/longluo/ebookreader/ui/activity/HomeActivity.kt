@@ -6,9 +6,11 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.Parcelable
 import android.provider.Settings
 import android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
 import android.util.Log
@@ -84,7 +86,49 @@ class HomeActivity : AppActivity(), NavigationAdapter.OnNavigationListener {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         switchFragment(mPagerAdapter!!.getFragmentIndex(getSerializable(INTENT_KEY_IN_FRAGMENT_CLASS)))
+        when {
+            intent.action == Intent.ACTION_SEND -> {
+                if ("text/plain" == intent.type) {
+                    handleSendText(intent) // Handle text being sent
+                } else if (intent.type?.startsWith("image/") == true) {
+                    handleSendImage(intent) // Handle single image being sent
+                } else  {
+                    Log.d(TAG, "ACTION_SEND other case")
+                }
+            }
+            intent?.action == Intent.ACTION_SEND_MULTIPLE
+                    && intent.type?.startsWith("image/") == true -> {
+                handleSendMultipleImages(intent) // Handle multiple images being sent
+            }
+            else -> {
+                Log.d(TAG, "handleSendText")
+            }
+        }
     }
+
+    private fun handleSendText(intent: Intent) {
+        Log.d(TAG, "handleSendText, intent extra = ${intent.extras}")
+        intent.getStringExtra(Intent.EXTRA_TEXT)?.let {
+            Log.d(TAG, "handleSendText text length = ${it.length}")
+        }
+
+        (intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri)?.let {
+            Log.d(TAG, "handleSendText uri = ${it}")
+        }
+    }
+
+    private fun handleSendImage(intent: Intent) {
+        (intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri)?.let {
+            Log.d(TAG, "handleSendImage")
+        }
+    }
+
+    private fun handleSendMultipleImages(intent: Intent) {
+        intent.getParcelableArrayListExtra<Parcelable>(Intent.EXTRA_STREAM)?.let {
+            Log.d(TAG, "handleSendMultipleImages")
+        }
+    }
+
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
@@ -210,6 +254,7 @@ class HomeActivity : AppActivity(), NavigationAdapter.OnNavigationListener {
     companion object {
         private const val INTENT_KEY_IN_FRAGMENT_INDEX = "fragmentIndex"
         private const val INTENT_KEY_IN_FRAGMENT_CLASS = "fragmentClass"
+        val TAG = "HomeActivity"
         @JvmOverloads
         fun start(
             context: Context,

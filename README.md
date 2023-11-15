@@ -47,5 +47,6 @@ Or Scan the QRCode:
 ## fix 
 
 * 文件权限  [from](https://blog.csdn.net/weixin_45112340/article/details/128905213)
-* 
+* 接收分享内容 [from](https://blog.csdn.net/a1018875550/article/details/82957333)
+* [Android添加文件打开方式，将你的app加入打开方式](https://blog.csdn.net/hxl517116279/article/details/79448324)
 

@@ -9,6 +9,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.longluo.ebookreader.R
 import com.longluo.ebookreader.db.BookMeta
 import com.longluo.ebookreader.ui.adapter.view.BookshelfViewHolder
+import com.longluo.ebookreader.util.FileUtils.getFileName
+import com.longluo.ebookreader.util.FileUtils.getSuffix
 
 class BookshelfAdapter(private val mContext: Context, private var mBookList: List<BookMeta>) :
     RecyclerView.Adapter<BookshelfViewHolder>() {
@@ -46,7 +48,7 @@ class BookshelfAdapter(private val mContext: Context, private var mBookList: Lis
     ) {
         val item = mBookList[position];
         holder.tvBookName.text = item.bookName
-        holder.tvBookType.text = item.bookPath.subSequence(item.bookPath.length-3, item.bookPath.length)
+        holder.tvBookType.text = getSuffix(item.bookPath)
         holder.itemView.setOnClickListener { v: View? ->
             if (listener != null) {
                 listener!!.onClick(position)

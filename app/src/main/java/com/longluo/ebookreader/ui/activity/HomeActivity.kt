@@ -1,35 +1,38 @@
 package com.longluo.ebookreader.ui.activity
 
-import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
+import android.database.Cursor
 import android.net.Uri
-import android.os.Build
-import android.os.Bundle
-import android.os.Environment
-import android.os.Parcelable
+import android.os.*
+import android.provider.MediaStore
 import android.provider.Settings
-import android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
+import android.text.TextUtils
 import android.util.Log
 import android.widget.Toast
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
+import com.airbnb.lottie.L
 import com.gyf.immersionbar.ImmersionBar
 import com.longluo.ebookreader.R
 import com.longluo.ebookreader.app.AppActivity
 import com.longluo.ebookreader.app.AppFragment
+import com.longluo.ebookreader.db.BookMeta
 import com.longluo.ebookreader.manager.ActivityManager
 import com.longluo.ebookreader.other.DoubleClickHelper
 import com.longluo.ebookreader.ui.adapter.NavigationAdapter
 import com.longluo.ebookreader.ui.fragment.BookshelfFragment
 import com.longluo.ebookreader.ui.fragment.FileExplorerFragment
 import com.longluo.ebookreader.ui.fragment.MineFragment
+import com.longluo.ebookreader.util.FileUtils.getFileName
 import io.github.longluo.base.FragmentPagerAdapter
+import org.litepal.LitePal.saveAll
+import org.litepal.LitePal.where
+import java.io.*
 
 
 /**
@@ -87,13 +90,17 @@ class HomeActivity : AppActivity(), NavigationAdapter.OnNavigationListener {
         super.onNewIntent(intent)
         switchFragment(mPagerAdapter!!.getFragmentIndex(getSerializable(INTENT_KEY_IN_FRAGMENT_CLASS)))
         when {
-            intent.action == Intent.ACTION_SEND -> {
+            intent.action == Intent.ACTION_SEND || intent.action == Intent.ACTION_VIEW -> {
                 if ("text/plain" == intent.type) {
                     handleSendText(intent) // Handle text being sent
                 } else if (intent.type?.startsWith("image/") == true) {
                     handleSendImage(intent) // Handle single image being sent
                 } else  {
-                    Log.d(TAG, "ACTION_SEND other case")
+                    Log.d(TAG, "ACTION_SEND other case, uri = XXX")
+                    (intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri)?.let {
+                        Log.d(TAG, "handleSendText uri = ${it}, path=${it.path}")
+                        addBookWithUri(it);
+                    }
                 }
             }
             intent?.action == Intent.ACTION_SEND_MULTIPLE
@@ -101,7 +108,7 @@ class HomeActivity : AppActivity(), NavigationAdapter.OnNavigationListener {
                 handleSendMultipleImages(intent) // Handle multiple images being sent
             }
             else -> {
-                Log.d(TAG, "handleSendText")
+                Log.d(TAG, "other type ===")
             }
         }
     }
@@ -113,8 +120,55 @@ class HomeActivity : AppActivity(), NavigationAdapter.OnNavigationListener {
         }
 
         (intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri)?.let {
-            Log.d(TAG, "handleSendText uri = ${it}")
+            Log.d(TAG, "handleSendText uri = ${it}, path=${it.path}")
+            addBookWithUri(it);
         }
+
+        intent.data?.let {
+            Log.d(TAG, "handleSendText uri = ${it}, path=${it.path}")
+            addBookWithUri(it);
+        }
+    }
+
+    private fun addBookWithUri(uri: Uri) {
+        var file = getFileFromContentUri(uri, context);
+        file?.let {
+            val bookMetas: MutableList<BookMeta> = ArrayList()
+            val bookMeta = BookMeta()
+            val bookPath =  it.path
+            val bookName = getFileName(bookPath)
+            bookMeta.bookName = bookName
+            bookMeta.bookPath = bookPath
+            bookMetas.add(bookMeta)
+
+            for (bookMeta in bookMetas) {
+                val books = where("bookPath = ?", bookMeta.bookPath).find(
+                    BookMeta::class.java
+                )
+                if (books.size > 0) {
+                    return
+                }
+            }
+
+            try {
+                saveAll(bookMetas)
+                refreshBookShelf()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                return
+            }
+        }
+
+
+//        @SuppressLint("StaticFieldLeak") val mSaveBookToSqlLiteTask: SaveBookToSqlLiteTask =
+//            object : SaveBookToSqlLiteTask() {
+//                override fun onPostExecute(result: Int?) {
+//                    val homeActivity = activity as HomeActivity
+//                    homeActivity.refreshBookShelf()
+//                    super.onPostExecute(result)
+//                }
+//            }
+//        mSaveBookToSqlLiteTask.execute(bookMetas)
     }
 
     private fun handleSendImage(intent: Intent) {
@@ -268,4 +322,101 @@ class HomeActivity : AppActivity(), NavigationAdapter.OnNavigationListener {
             context.startActivity(intent)
         }
     }
+}
+
+
+@SuppressLint("Range")
+fun getFileFromContentUri(contentUri: Uri?, context: Context): File? {
+    if (contentUri == null) {
+        return null
+    }
+    var file: File? = null
+    var filePath: String? = null
+    val fileName: String
+    val filePathColumn = arrayOf(MediaStore.MediaColumns.DATA, MediaStore.MediaColumns.DISPLAY_NAME)
+    val contentResolver = context.contentResolver
+    val cursor: Cursor? = contentResolver.query(
+        contentUri, filePathColumn, null,
+        null, null
+    )
+    if (cursor != null) {
+        cursor.moveToFirst()
+        try {
+            filePath = cursor.getString(cursor.getColumnIndex(filePathColumn[0]))
+        } catch (e: java.lang.Exception) {
+        }
+        fileName = cursor.getString(cursor.getColumnIndex(filePathColumn[1]))
+        cursor.close()
+        if (!TextUtils.isEmpty(filePath)) {
+            file = File(filePath)
+        }
+        if (file == null || !file!!.exists() || file.length() <= 0 || TextUtils.isEmpty(filePath)) {
+            filePath = getPathFromInputStreamUri(context, contentUri, fileName)
+        }
+        if (!TextUtils.isEmpty(filePath)) {
+            file = File(filePath)
+        }
+    }
+    return file
+}
+
+/**
+ * 用流拷贝文件一份到自己APP目录下
+ *
+ * @param context
+ * @param uri
+ * @param fileName
+ * @return
+ */
+fun getPathFromInputStreamUri(context: Context, uri: Uri, fileName: String): String? {
+    var inputStream: InputStream? = null
+    var filePath: String? = null
+    if (uri.authority != null) {
+        try {
+            inputStream = context.contentResolver.openInputStream(uri)
+            val file = createTemporalFileFrom(context, inputStream, fileName)
+            filePath = file!!.path
+        } catch (e: java.lang.Exception) {
+            Log.e("", "$e")
+        } finally {
+            try {
+                if (inputStream != null) {
+                    inputStream.close()
+                }
+            } catch (e: java.lang.Exception) {
+                Log.e("", "$e")
+            }
+        }
+    }
+    return filePath
+}
+
+@Throws(IOException::class)
+private fun createTemporalFileFrom(
+    context: Context,
+    inputStream: InputStream?,
+    fileName: String
+): File? {
+    var targetFile: File? = null
+//    val aa = context.cacheDir
+    if (inputStream != null) {
+        var read: Int
+        val buffer = ByteArray(8 * 1024)
+        //自己定义拷贝文件路径
+        targetFile = File(context.cacheDir, fileName)
+        if (targetFile!!.exists()) {
+            targetFile.delete()
+        }
+        val outputStream: OutputStream = FileOutputStream(targetFile)
+        while (inputStream.read(buffer).also { read = it } != -1) {
+            outputStream.write(buffer, 0, read)
+        }
+        outputStream.flush()
+        try {
+            outputStream.close()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+    }
+    return targetFile
 }

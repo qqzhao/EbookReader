@@ -221,7 +221,7 @@ public class FileExplorerFragment extends TitleBarFragment<HomeActivity> {
 
     @Permissions({Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE})
     private void requestPermission() {
-        toast("获取存储权限成功");
+//        toast("获取存储权限成功");
     }
 
     public boolean onBackPressed_() {
@@ -371,7 +371,7 @@ public class FileExplorerFragment extends TitleBarFragment<HomeActivity> {
         File file;
     }
 
-    private class SaveBookToSqlLiteTask extends AsyncTask<List<BookMeta>, Void, Integer> {
+    public class SaveBookToSqlLiteTask extends AsyncTask<List<BookMeta>, Void, Integer> {
         private static final int FAIL = 0;
         private static final int SUCCESS = 1;
         private static final int REPEAT = 2;

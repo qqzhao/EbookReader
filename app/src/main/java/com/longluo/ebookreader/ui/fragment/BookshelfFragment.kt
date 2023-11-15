@@ -1,145 +1,135 @@
-package com.longluo.ebookreader.ui.fragment;
+package com.longluo.ebookreader.ui.fragment
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
+import android.app.AlertDialog
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.longluo.ebookreader.R
+import com.longluo.ebookreader.app.TitleBarFragment
+import com.longluo.ebookreader.db.BookMark
+import com.longluo.ebookreader.db.BookMeta
+import com.longluo.ebookreader.ui.activity.HomeActivity
+import com.longluo.ebookreader.ui.adapter.BookshelfAdapter
+import com.longluo.ebookreader.util.BookUtils
+import com.longluo.ebookreader.widget.itemdecoration.DividerItemDecoration
+import org.litepal.LitePal.delete
+import org.litepal.LitePal.deleteAll
+import org.litepal.LitePal.findAll
+import org.litepal.crud.LitePalSupport
+import java.io.File
 
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
-import com.longluo.ebookreader.R;
-import com.longluo.ebookreader.app.TitleBarFragment;
-import com.longluo.ebookreader.db.BookMeta;
-import com.longluo.ebookreader.ui.activity.HomeActivity;
-import com.longluo.ebookreader.ui.adapter.BookshelfAdapter;
-import com.longluo.ebookreader.util.BookUtils;
-import com.longluo.ebookreader.widget.itemdecoration.DividerItemDecoration;
-
-import org.litepal.LitePal;
-
-import java.io.File;
-import java.util.List;
-
-public class BookshelfFragment extends TitleBarFragment<HomeActivity> {
-
-    private RecyclerView mBookshelf;
-
-    private List<BookMeta> mBooks;
-
-    private BookshelfAdapter mBookshelfAdapter;
+class BookshelfFragment : TitleBarFragment<HomeActivity?>() {
+    private var mBookshelf: RecyclerView? = null
+    private var mBooks: MutableList<BookMeta>? = null
+    private var mBookshelfAdapter: BookshelfAdapter? = null
 
     //点击书本的位置
-    private int itemPosition;
-
-    public static BookshelfFragment newInstance() {
-        return new BookshelfFragment();
+    private var itemPosition = 0
+    override fun getLayoutId(): Int {
+        return R.layout.bookshelf_fragment
     }
 
-    @Override
-    protected int getLayoutId() {
-        return R.layout.bookshelf_fragment;
+    override fun initView() {
+        mBookshelf = findViewById(R.id.bookShelf)
     }
 
-    @Override
-    protected void initView() {
-        mBookshelf = findViewById(R.id.bookShelf);
-
+    override fun initData() {
+        mBooks = findAll(BookMeta::class.java)
+        mBookshelfAdapter = BookshelfAdapter(requireActivity(), mBooks!!)
+        mBookshelf!!.layoutManager = GridLayoutManager(activity, 4)
+        mBookshelf!!.adapter = mBookshelfAdapter
+        mBookshelf!!.addItemDecoration(
+            DividerItemDecoration(
+                activity
+            )
+        )
+        mBookshelfAdapter!!.notifyDataSetChanged()
+        initListener()
     }
 
-    @Override
-    protected void initData() {
-        mBooks = LitePal.findAll(BookMeta.class);
-
-        mBookshelfAdapter = new BookshelfAdapter(getActivity(), mBooks);
-        mBookshelf.setLayoutManager(new GridLayoutManager(getActivity(), 4));
-        mBookshelf.setAdapter(mBookshelfAdapter);
-        mBookshelf.addItemDecoration(new DividerItemDecoration(getActivity()));
-
-        mBookshelfAdapter.notifyDataSetChanged();
-
-        initListener();
+    fun refreshData() {
+        mBooks = findAll(BookMeta::class.java)
+        mBookshelfAdapter!!.setBookLists(mBooks!!)
+        mBookshelfAdapter!!.notifyDataSetChanged()
     }
 
-    public void refreshData() {
-        mBooks = LitePal.findAll(BookMeta.class);
-        mBookshelfAdapter.setBookLists(mBooks);
-        mBookshelfAdapter.notifyDataSetChanged();
-    }
-
-    private void initListener() {
-        mBookshelfAdapter.setOnItemClickListener(new BookshelfAdapter.OnItemClickListener() {
-            @Override
-            public void onClick(int position) {
-                if (mBooks.size() > position) {
-                    itemPosition = position;
-                    final BookMeta bookMeta = mBooks.get(itemPosition);
-                    bookMeta.setId(mBooks.get(0).getId());
-                    final String path = bookMeta.getBookPath();
-                    File file = new File(path);
+    private fun initListener() {
+        mBookshelfAdapter!!.setOnItemClickListener(object : BookshelfAdapter.OnItemClickListener {
+            override fun onClick(position: Int) {
+                if (mBooks!!.size > position) {
+                    itemPosition = position
+                    val bookMeta = mBooks!![itemPosition]
+                    bookMeta.id = mBooks!![0].id
+                    val path = bookMeta.bookPath
+                    val file = File(path)
                     if (!file.exists()) {
-                        new AlertDialog.Builder(getActivity())
-                                .setTitle(getActivity().getString(R.string.app_name))
-                                .setMessage(path + "文件不存在,是否删除该书本？")
-                                .setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        LitePal.deleteAll(BookMeta.class, "bookPath = ?", path);
-                                        mBooks = LitePal.findAll(BookMeta.class);
-//                                        mShelfAdapter.setmBookList(mBooks);
-                                    }
-                                }).setCancelable(true).show();
-                        return;
+                        AlertDialog.Builder(activity)
+                            .setTitle(activity!!.getString(R.string.app_name))
+                            .setMessage(path + "文件不存在,是否删除该书本？")
+                            .setPositiveButton(R.string.delete) { dialog, which ->
+                                deleteBook(position)
+                                //mShelfAdapter.setmBookList(mBooks);
+                            }.setCancelable(true).show()
+                        return
                     }
-
-                    BookUtils.openBook(getActivity(), bookMeta);
+                    BookUtils.openBook(activity, bookMeta)
                 }
             }
-        });
-
-        mBookshelfAdapter.setOnItemLongClickListener(new BookshelfAdapter.OnItemLongClickListener() {
-            @Override
-            public void onClick(int position) {
-                new AlertDialog.Builder(getActivity())
-                        .setTitle("提示")
-                        .setMessage("是否删除书本？")
-                        .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        })
-                        .setPositiveButton("删除", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-//                                LitePal.delete(BookMark.class, bookMarkList.get(position).getId());
-//                                bookMarkList.clear();
-//                                bookMarkList.addAll(LitePal.where("bookPath = ?", bookPath).find(BookMark.class));
-//                                bookMarkAdapter.notifyDataSetChanged();
-
-                            }
-                        }).setCancelable(true).show();
+        })
+        mBookshelfAdapter!!.setOnItemLongClickListener(object :
+            BookshelfAdapter.OnItemLongClickListener {
+            override fun onClick(position: Int) {
+                AlertDialog.Builder(activity)
+                    .setTitle("提示")
+                    .setMessage("是否删除书本？")
+                    .setNegativeButton("取消") { dialog, which -> dialog.dismiss() }
+                    .setPositiveButton("删除") { dialog, which ->
+                        deleteBook(position)
+                    }.setCancelable(true).show()
             }
-        });
+        })
     }
 
-    @Override
-    public boolean isStatusBarEnabled() {
+    private fun deleteBook(position: Int) {
+        Thread {
+            try {
+                val item = mBooks!![position];
+                item.delete()
+//                delete(BookMark::class.java, mBooks!![position].id.toLong())
+            } catch (e: java.lang.Exception) {
+                Log.d("XX", "dd = $e")
+            }
+            Handler(Looper.getMainLooper()).post {
+                mBooks!!.clear()
+                //mBooks.addAll(LitePal.where("bookPath = ?", bookPath).find(BookMark.class));
+                refreshData()
+            }
+        }.start()
+    }
+
+    override fun isStatusBarEnabled(): Boolean {
         // 使用沉浸式状态栏
-        return !super.isStatusBarEnabled();
+        return !super.isStatusBarEnabled()
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        mBooks = LitePal.findAll(BookMeta.class);
+    override fun onResume() {
+        super.onResume()
+        mBooks = findAll(BookMeta::class.java)
     }
 
-    @Override
-    public void onStop() {
-        super.onStop();
+    override fun onStop() {
+        super.onStop()
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
+    override fun onDestroy() {
+        super.onDestroy()
+    }
+
+    companion object {
+        fun newInstance(): BookshelfFragment {
+            return BookshelfFragment()
+        }
     }
 }

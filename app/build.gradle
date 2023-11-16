@@ -4,7 +4,10 @@ plugins {
     id 'org.greenrobot.greendao'
     id 'android-aspectjx'
     id 'org.jetbrains.kotlin.android'
+    id 'kotlin-kapt'
 }
+
+// applyplugin:'kotlin-kapt'
 
 apply from: '../common.gradle'
 
@@ -159,8 +162,12 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.1'
 
     // ButterKnife
-    implementation 'com.jakewharton:butterknife:10.2.1'
-    annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.1'
+//    implementation 'com.jakewharton:butterknife:10.2.1'
+//    annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.1'
+    implementation 'com.jakewharton:butterknife:10.2.0'
+    kapt 'com.jakewharton:butterknife-compiler:10.2.0'
+
+
 
     // LitePal Database
     implementation 'org.litepal.guolindev:core:3.2.3'
@@ -269,6 +276,8 @@ dependencies {
     // OpenCC to convert Simp. Chinese to Trad. Chinese
     implementation 'com.github.qichuan:android-opencc:1.2.0'
     implementation 'androidx.core:core-ktx:1.0.1'
+
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.1'
 
     //implementation 'com.google.android.gms:play-services-ads:20.5.0'
 

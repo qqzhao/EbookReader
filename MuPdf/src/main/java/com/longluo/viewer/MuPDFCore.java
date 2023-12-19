@@ -16,6 +16,7 @@ import com.artifex.mupdf.fitz.android.AndroidDrawDevice;
 
 import android.graphics.Bitmap;
 import android.graphics.PointF;
+import android.util.Log;
 
 import java.util.ArrayList;
 
@@ -79,6 +80,7 @@ public class MuPDFCore
 				outline = doc.loadOutline();
 			} catch (Exception ex) {
 				/* ignore error */
+				Log.d("", "ext");
 			}
 			return doc.pageNumberFromLocation(doc.findBookmark(mark));
 		}
@@ -163,7 +165,7 @@ public class MuPDFCore
 		return doc.pageNumberFromLocation(doc.resolveLink(link));
 	}
 
-	public synchronized Quad[] searchPage(int pageNum, String text) {
+	public synchronized Quad[][] searchPage(int pageNum, String text) {
 		gotoPage(pageNum);
 		return page.search(text);
 	}

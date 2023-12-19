@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2022 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -17,46 +17,43 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 package com.artifex.mupdf.fitz;
 
-public final class Location
+import java.util.Objects;
+
+public class Location
 {
 	public final int chapter;
 	public final int page;
-	public final float x, y;
 
 	public Location(int chapter, int page) {
 		this.chapter = chapter;
 		this.page = page;
-		this.x = this.y = 0;
 	}
 
-	public Location(int chapter, int page, float x, float y) {
-		this.chapter = chapter;
-		this.page = page;
-		this.x = x;
-		this.y = y;
-	}
-
-	public Location(Location location, float x, float y) {
-		this.chapter = location.chapter;
-		this.page = location.page;
-		this.x = x;
-		this.y = y;
-	}
-
+	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof Location))
 			return false;
-
 		Location other = (Location) obj;
+		return this.chapter == other.chapter && this.page == other.page;
+	}
 
-		return this.chapter == other.chapter &&
-			this.page == other.page &&
-			this.x == other.x &&
-			this.y == other.y;
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.chapter, this.page);
+	}
+
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Location(chapter=");
+		sb.append(chapter);
+		sb.append(", page=");
+		sb.append(page);
+		sb.append(")");
+		return sb.toString();
 	}
 }

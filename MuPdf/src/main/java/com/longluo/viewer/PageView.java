@@ -26,7 +26,7 @@ import android.widget.ProgressBar;
 import android.os.AsyncTask;
 
 // Make our ImageViews opaque to optimize redraw
-class OpaqueImageView extends ImageView {
+class OpaqueImageView extends androidx.appcompat.widget.AppCompatImageView {
 
 	public OpaqueImageView(Context context) {
 		super(context);
@@ -266,8 +266,8 @@ public class PageView extends ViewGroup {
 					if (!mIsBlank && mLinks != null && mHighlightLinks) {
 						paint.setColor(LINK_COLOR);
 						for (Link link : mLinks)
-							canvas.drawRect(link.bounds.x0*scale, link.bounds.y0*scale,
-									link.bounds.x1*scale, link.bounds.y1*scale,
+							canvas.drawRect(link.getBounds().x0*scale, link.getBounds().y0*scale,
+									link.getBounds().x1*scale, link.getBounds().y1*scale,
 									paint);
 					}
 				}
@@ -479,7 +479,7 @@ public class PageView extends ViewGroup {
 
 	public int hitLink(Link link) {
 		if (link.isExternal()) {
-			Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link.uri));
+			Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link.getURI()));
 			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET); // API>=21: FLAG_ACTIVITY_NEW_DOCUMENT
 			mContext.startActivity(intent);
 			return 0;
@@ -499,7 +499,7 @@ public class PageView extends ViewGroup {
 
 		if (mLinks != null)
 			for (Link l: mLinks)
-				if (l.bounds.contains(docRelX, docRelY))
+				if (l.getBounds().contains(docRelX, docRelY))
 					return hitLink(l);
 		return 0;
 	}

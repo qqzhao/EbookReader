@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 package com.artifex.mupdf.fitz;
 
@@ -98,6 +98,7 @@ public class PDFWidget extends PDFAnnotation
 	}
 	public native String getValue();
 	public native boolean setValue(String val);
+	public native String getLabel();
 
 	/* Button fields */
 
@@ -192,10 +193,10 @@ public class PDFWidget extends PDFAnnotation
 		return previewSignatureNative(width, height, lang, signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, null, null, null);
 	}
 	public static Pixmap previewSignature(int width, int height, PKCS7Signer signer, Image image) {
-		return previewSignatureNative(width, height, LANGUAGE_UNSET, signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, image, null, null);
+		return previewSignatureNative(width, height, PDFDocument.LANGUAGE_UNSET, signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, image, null, null);
 	}
 	public static Pixmap previewSignature(int width, int height, PKCS7Signer signer) {
-		return previewSignatureNative(width, height, LANGUAGE_UNSET, signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, null, null, null);
+		return previewSignatureNative(width, height, PDFDocument.LANGUAGE_UNSET, signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, null, null, null);
 	}
 	public Pixmap previewSignature(float dpi, PKCS7Signer signer, int flags, Image image, String reason, String location) {
 		Rect r = getBounds();
@@ -246,13 +247,13 @@ public class PDFWidget extends PDFAnnotation
 
 	public native TextWidgetLayout layoutTextWidget();
 
-	public class TextWidgetLayout {
+	public static class TextWidgetLayout {
 		public Matrix matrix;
 		public Matrix invMatrix;
 		public TextWidgetLineLayout[] lines;
 	}
 
-	public class TextWidgetLineLayout {
+	public static class TextWidgetLineLayout {
 		public float x;
 		public float y;
 		public float fontSize;
@@ -261,7 +262,7 @@ public class PDFWidget extends PDFAnnotation
 		public TextWidgetCharLayout[] chars;
 	}
 
-	public class TextWidgetCharLayout {
+	public static class TextWidgetCharLayout {
 		public float x;
 		public float advance;
 		public int index;

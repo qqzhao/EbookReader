@@ -444,7 +444,7 @@ class DocumentActivity : Activity() {
         setContentView(layout)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when (requestCode) {
             OUTLINE_REQUEST -> if (resultCode >= RESULT_FIRST_USER) {
                 mDocView!!.pushHistory()

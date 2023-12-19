@@ -17,8 +17,8 @@
 //
 // Alternative licensing terms are available from the licensor.
 // For commercial licensing, see <https://www.artifex.com/> or contact
-// Artifex Software, Inc., 1305 Grant Avenue - Suite 200, Novato,
-// CA 94945, U.S.A., +1(415)492-9861, for further information.
+// Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
+// CA 94129, USA, for further information.
 
 package com.artifex.mupdf.fitz;
 
@@ -57,23 +57,39 @@ public class Context
 		}
 	}
 
-	// FIXME: We should support the store size being changed dynamically.
-	// This requires changes within the MuPDF core.
-	//public native static void setStoreSize(long newSize);
-
-	//  empty the store
+	// empty and shrink the store
 	public native static void emptyStore();
+	public native static boolean shrinkStore(int percent);
 
 	public native static void enableICC();
 	public native static void disableICC();
 	public native static void setAntiAliasLevel(int level);
 
+	// The way CSS is controlled may have breaking changes in the future.
+	public native static void setUserCSS(String css);
+	public native static void useDocumentCSS(boolean state);
+
 	public native static Version getVersion();
 
-	public class Version {
+	public static class Version {
 		public String version;
 		public int major;
 		public int minor;
 		public int patch;
 	}
+
+	public static void setLog(Log log_) {
+		synchronized(lock) {
+			log = log_;
+		}
+	}
+
+	public interface Log
+	{
+		void error(String message);
+		void warning(String message);
+	}
+
+	private static Log log;
+	private final static Object lock = new Object();
 }

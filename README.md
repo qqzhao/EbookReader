@@ -50,4 +50,5 @@ Or Scan the QRCode:
 * 接收分享内容 [from](https://blog.csdn.net/a1018875550/article/details/82957333)
 * [Android添加文件打开方式，将你的app加入打开方式](https://blog.csdn.net/hxl517116279/article/details/79448324)
 * [kotlin 注解不生效问题](https://www.jianshu.com/p/7e92a78d08fd)
+* [升级muPdf库-1.23.7](https://www.mupdf.com/releases/index.html)
 

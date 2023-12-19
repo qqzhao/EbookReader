@@ -22,7 +22,9 @@ import android.widget.*
 import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.artifex.mupdf.fitz.Location
 import com.longluo.viewer.ReaderView.ViewMapper
+import kotlinx.coroutines.*
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.security.MessageDigest
@@ -218,12 +220,25 @@ class DocumentActivity : Activity() {
         alert.show()
     }
 
-    fun relayoutDocument() {
+    suspend fun getLocInfo(): Int = withContext(Dispatchers.IO) {
         val loc = core!!.layout(mDocView!!.mCurrent, mLayoutW, mLayoutH, mLayoutEM)
-        mFlatOutline = null
-        mDocView!!.mHistory.clear()
-        mDocView!!.refresh()
-        mDocView!!.displayedViewIndex = loc
+        return@withContext loc;
+    }
+    fun relayoutDocument() {
+        GlobalScope.launch(Dispatchers.Main) {
+            val loc = getLocInfo() //耗时任务，这里会切换到子线程
+
+            mFlatOutline = null
+            mDocView!!.mHistory.clear()
+            mDocView!!.refresh()
+            mDocView!!.displayedViewIndex = loc
+        }
+
+//        val loc = core!!.layout(mDocView!!.mCurrent, mLayoutW, mLayoutH, mLayoutEM)
+//        mFlatOutline = null
+//        mDocView!!.mHistory.clear()
+//        mDocView!!.refresh()
+//        mDocView!!.displayedViewIndex = loc
     }
 
     private val pageStoreKey get() = "page$mFileKey"

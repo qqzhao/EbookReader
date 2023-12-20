@@ -19,233 +19,286 @@
 // For commercial licensing, see <https://www.artifex.com/> or contact
 // Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
 // CA 94129, USA, for further information.
+package com.artifex.mupdf.fitz
 
-package com.artifex.mupdf.fitz;
+import android.util.Log
+import com.artifex.mupdf.fitz.OutlineIterator.OutlineItem
+import kotlinx.coroutines.*
 
-import android.util.Log;
+open class Document protected constructor(protected var pointer: Long) {
+    protected open external fun finalize()
+    fun destroy() {
+        pagesMap.clear()
+        finalize()
+    }
 
-public class Document
-{
-	static {
-		Context.init();
-	}
+    external fun supportsAccelerator(): Boolean
+    external fun saveAccelerator(filename: String?)
+    external fun outputAccelerator(stream: SeekableOutputStream?)
+    external fun needsPassword(): Boolean
+    external fun authenticatePassword(password: String?): Boolean
+    external fun countChapters(): Int
+//    external fun countPages(chapter: Int): Int
+    external fun countPages(chapter: Int): Int
+    external fun loadPage(chapter: Int, number: Int): Page
+    fun countPages(): Int {
+        Log.d("document-1", "countPages begin")
+        var np = 0
+        val nc = countChapters()
+        for (i in 0 until nc) np += countPagesWrap(i)
+        Log.d("document-1", "countPages end, np=$np")
+        return np
+    }
 
-	public static final String META_FORMAT = "format";
-	public static final String META_ENCRYPTION = "encryption";
-	public static final String META_INFO_AUTHOR = "info:Author";
-	public static final String META_INFO_TITLE = "info:Title";
-	public static final String META_INFO_SUBJECT = "info:Subject";
-	public static final String META_INFO_KEYWORDS = "info:Keywords";
-	public static final String META_INFO_CREATOR = "info:Creator";
-	public static final String META_INFO_PRODUCER = "info:Producer";
-	public static final String META_INFO_CREATIONDATE = "info:CreationDate";
-	public static final String META_INFO_MODIFICATIONDATE = "info:ModDate";
+    var curConfigStr: String = ""
+    val pagesMap: HashMap<String, Int> = hashMapOf()
 
-	protected long pointer;
+//    suspend fun countPagesOptForRange(from: Int, to: Int): Int = withContext(Dispatchers.Default) {
+//        var np = 0
+//        for (i in from until to) np += countPages(i)
+//        return@withContext np;
+//    }
 
-	protected native void finalize();
+    fun countPagesOpt(needAll: Boolean, callback: (value: Int) -> Unit): Int {
+        Log.d("document-1", "countPages begin")
+        var np = 0
+        val nc = countChapters()
+        if (nc >= 100 && !needAll) {
+            GlobalScope.launch(Dispatchers.Default) {
+                val allCount = countPages()
+//                callback.invoke(allCount)
+                callback(allCount)
+            }
+            np = 100
+        } else {
+            np = countPages()
+        }
+        return np
+    }
 
-	public void destroy() {
-		finalize();
-	}
+    fun loadPage(loc: Location): Page {
+        return loadPage(loc.chapter, loc.page)
+    }
 
-	protected Document(long p) {
-		pointer = p;
-	}
+    fun loadPage(number: Int): Page {
+        var start = 0
+        val nc = countChapters()
+        for (i in 0 until nc) {
+            val np = countPagesWrap(i)
+            if (number < start + np) return loadPage(i, number - start)
+            start += np
+        }
+        throw IllegalArgumentException("page number out of range")
+    }
 
-	protected native static Document openNativeWithPath(String filename, String accelerator);
-	protected native static Document openNativeWithBuffer(String magic, byte[] buffer, byte[] accelerator);
-	protected native static Document openNativeWithStream(String magic, SeekableInputStream stream, SeekableInputStream accelerator);
-	protected native static Document openNativeWithPathAndStream(String filename, SeekableInputStream accelerator);
+    fun lastPage(): Location {
+        val nc = countChapters()
+        val np = countPagesWrap(nc - 1)
+        return Location(nc - 1, np - 1)
+    }
 
-	public static Document openDocument(String filename) {
-		return openNativeWithPath(filename, null);
-	}
+    fun nextPage(loc: Location): Location {
+        val np = countPagesWrap(loc.chapter)
+        if (loc.page + 1 == np) {
+            val nc = countChapters()
+            if (loc.chapter + 1 < nc) return Location(loc.chapter + 1, 0)
+        } else {
+            return Location(loc.chapter, loc.page + 1)
+        }
+        return loc
+    }
 
-	public static Document openDocument(String filename, String accelerator) {
-		return openNativeWithPath(filename, accelerator);
-	}
+    fun previousPage(loc: Location): Location {
+        if (loc.page == 0) {
+            if (loc.chapter > 0) {
+                val np = countPagesWrap(loc.chapter - 1)
+                return Location(loc.chapter - 1, np - 1)
+            }
+        } else {
+            return Location(loc.chapter, loc.page - 1)
+        }
+        return loc
+    }
 
-	public static Document openDocument(String filename, SeekableInputStream accelerator) {
-		return openNativeWithPathAndStream(filename, accelerator);
-	}
+    fun clampLocation(input: Location): Location {
+        var c = input.chapter
+        var p = input.page
+        val nc = countChapters()
+        if (c < 0) c = 0
+        if (c >= nc) c = nc - 1
+        val np = countPagesWrap(c)
+        if (p < 0) p = 0
+        if (p >= np) p = np - 1
+        return if (input.chapter == c && input.page == p) input else Location(
+            c,
+            p
+        )
+    }
 
-	public static Document openDocument(byte[] buffer, String magic) {
-		return openNativeWithBuffer(magic, buffer, null);
-	}
+    fun locationFromPageNumber(number: Int): Location {
+        var number = number
+        var i: Int
+        var start = 0
+        var np = 0
+        val nc = countChapters()
+        if (number < 0) number = 0
+        i = 0
+        while (i < nc) {
+            np = countPagesWrap(i)
+            if (number < start + np) return Location(i, number - start)
+            start += np
+            ++i
+        }
+        return Location(i - 1, np - 1)
+    }
 
-	public static Document openDocument(byte[] buffer, String magic, byte[] accelerator) {
-		return openNativeWithBuffer(magic, buffer, accelerator);
-	}
+    fun pageNumberFromLocation(loc: Location?): Int {
+        val nc = countChapters()
+        var start = 0
+        if (loc == null) return -1
+        for (i in 0 until nc) {
+            if (i == loc.chapter) return start + loc.page
+            start += countPagesWrap(i)
+        }
+        return -1
+    }
 
-	public static Document openDocument(SeekableInputStream stream, String magic) {
-		return openNativeWithStream(magic, stream, null);
-	}
+    external fun search(chapter: Int, page: Int, needle: String?): Array<Array<Quad?>?>?
+    external fun resolveLink(uri: String?): Location
+    fun resolveLink(link: Outline): Location {
+        return resolveLink(link.uri)
+    }
 
-	public static Document openDocument(SeekableInputStream stream, String magic, SeekableInputStream accelerator) {
-		return openNativeWithStream(magic, stream, accelerator);
-	}
+    fun resolveLink(link: Link): Location {
+        return resolveLink(link.uri)
+    }
 
-	public static native boolean recognize(String magic);
+    external fun resolveLinkDestination(uri: String?): LinkDestination
+    fun resolveLinkDestination(item: OutlineItem): LinkDestination {
+        return resolveLinkDestination(item.uri)
+    }
 
-	public native boolean supportsAccelerator();
-	public native void saveAccelerator(String filename);
-	public native void outputAccelerator(SeekableOutputStream stream);
+    fun resolveLinkDestination(link: Outline): LinkDestination {
+        return resolveLinkDestination(link.uri)
+    }
 
-	public native boolean needsPassword();
-	public native boolean authenticatePassword(String password);
+    fun resolveLinkDestination(link: Link): LinkDestination {
+        return resolveLinkDestination(link.uri)
+    }
 
-	public native int countChapters();
-	public native int countPages(int chapter);
-	public native Page loadPage(int chapter, int number);
 
-	public int countPages() {
-		Log.d("document-1", "countPages begin");
-		int np = 0;
-		int nc = countChapters();
-		for (int i = 0; i < nc; ++i)
-			np += countPages(i);
-		Log.d("document-1", "countPages end, np=" + np);
-		return np;
-	}
+    fun layoutWrap(width: Float, height: Float, em: Float) {
+        curConfigStr = "config_$width|$height|$em"
+        layout(width, height, em)
+    }
 
-	public Page loadPage(Location loc) {
-		return loadPage(loc.chapter, loc.page);
-	}
+    fun countPagesWrap(chapter: Int): Int {
+        val key = "${curConfigStr}_$chapter"
+        var value = pagesMap[key];
+        if (value == null) {
+            Log.d("document-1", "chapter=$chapter: $value")
+            value = countPages(chapter)
+            pagesMap.put(key, value);
+        }
+        return value
+    }
 
-	public Page loadPage(int number) {
-		int start = 0;
-		int nc = countChapters();
-		for (int i = 0; i < nc; ++i) {
-			int np = countPages(i);
-			if (number < start + np)
-				return loadPage(i, number - start);
-			start += np;
-		}
-		throw new IllegalArgumentException("page number out of range");
-	}
+    external fun loadOutline(): Array<Outline?>?
+    external fun outlineIterator(): OutlineIterator?
+    external fun getMetaData(key: String?): String?
+    external fun setMetaData(key: String?, value: String?)
+    val isReflowable: Boolean
+        external get
 
-	public Location lastPage() {
-		int nc = countChapters();
-		int np = countPages(nc-1);
-		return new Location(nc-1, np-1);
-	}
+    external fun layout(width: Float, height: Float, em: Float)
+    external fun findBookmark(mark: Long): Location?
+    external fun makeBookmark(chapter: Int, page: Int): Long
+    fun makeBookmark(loc: Location): Long {
+        return makeBookmark(loc.chapter, loc.page)
+    }
 
-	public Location nextPage(Location loc) {
-		int np = countPages(loc.chapter);
-		if (loc.page + 1 == np) {
-			int nc = countChapters();
-			if (loc.chapter + 1 < nc)
-				return new Location(loc.chapter + 1, 0);
-		} else {
-			return new Location(loc.chapter, loc.page + 1);
-		}
-		return loc;
-	}
+    external fun hasPermission(permission: Int): Boolean
+    val isUnencryptedPDF: Boolean
+        external get
 
-	public Location previousPage(Location loc) {
-		if (loc.page == 0) {
-			if (loc.chapter > 0) {
-				int np = countPages(loc.chapter - 1);
-				return new Location(loc.chapter - 1, np - 1);
-			}
-		} else {
-			return new Location(loc.chapter, loc.page - 1);
-		}
-		return loc;
-	}
+    external fun formatLinkURI(dest: LinkDestination?): String?
 
-	public Location clampLocation(Location input) {
-		int c = input.chapter;
-		int p = input.page;
-		int nc = countChapters();
-		if (c < 0) c = 0;
-		if (c >= nc) c = nc - 1;
-		int np = countPages(c);
-		if (p < 0) p = 0;
-		if (p >= np) p = np - 1;
-		if (input.chapter == c && input.page == p)
-			return input;
-		return new Location(c, p);
-	}
+    open val isPDF: Boolean
+        get() = false
 
-	public Location locationFromPageNumber(int number) {
-		int i, start = 0, np = 0, nc = countChapters();
-		if (number < 0)
-			number = 0;
-		for (i = 0; i < nc; ++i)
-		{
-			np = countPages(i);
-			if (number < start + np)
-				return new Location(i, number - start);
-			start += np;
-		}
-		return new Location(i - 1, np - 1);
-	}
+    companion object {
+        init {
+            Context.init()
+        }
 
-	public int pageNumberFromLocation(Location loc) {
-		int nc = countChapters();
-		int start = 0;
-		if (loc == null)
-			return -1;
-		for (int i = 0; i < nc; ++i) {
-			if (i == loc.chapter)
-				return start + loc.page;
-			start += countPages(i);
-		}
-		return -1;
-	}
+        const val META_FORMAT = "format"
+        const val META_ENCRYPTION = "encryption"
+        const val META_INFO_AUTHOR = "info:Author"
+        const val META_INFO_TITLE = "info:Title"
+        const val META_INFO_SUBJECT = "info:Subject"
+        const val META_INFO_KEYWORDS = "info:Keywords"
+        const val META_INFO_CREATOR = "info:Creator"
+        const val META_INFO_PRODUCER = "info:Producer"
+        const val META_INFO_CREATIONDATE = "info:CreationDate"
+        const val META_INFO_MODIFICATIONDATE = "info:ModDate"
+        @JvmStatic protected external fun openNativeWithPath(filename: String?, accelerator: String?): Document
+        @JvmStatic protected external fun openNativeWithBuffer(
+            magic: String?,
+            buffer: ByteArray?,
+            accelerator: ByteArray?
+        ): Document
 
-	public native Quad[][] search(int chapter, int page, String needle);
+        @JvmStatic protected external fun openNativeWithStream(
+            magic: String?,
+            stream: SeekableInputStream?,
+            accelerator: SeekableInputStream?
+        ): Document
 
-	public native Location resolveLink(String uri);
-	public Location resolveLink(Outline link) {
-		return resolveLink(link.uri);
-	}
-	public Location resolveLink(Link link) {
-		return resolveLink(link.getURI());
-	}
+        @JvmStatic protected external fun openNativeWithPathAndStream(
+            filename: String?,
+            accelerator: SeekableInputStream?
+        ): Document
 
-	public native LinkDestination resolveLinkDestination(String uri);
-	public LinkDestination resolveLinkDestination(OutlineIterator.OutlineItem item) {
-		return resolveLinkDestination(item.uri);
-	}
-	public LinkDestination resolveLinkDestination(Outline link) {
-		return resolveLinkDestination(link.uri);
-	}
-	public LinkDestination resolveLinkDestination(Link link) {
-		return resolveLinkDestination(link.getURI());
-	}
+        @JvmStatic fun openDocument(filename: String?): Document {
+            return openNativeWithPath(filename, null)
+        }
 
-	public native Outline[] loadOutline();
-	public native OutlineIterator outlineIterator();
-	public native String getMetaData(String key);
-	public native void setMetaData(String key, String value);
-	public native boolean isReflowable();
-	public native void layout(float width, float height, float em);
+        @JvmStatic fun openDocument(filename: String?, accelerator: String?): Document {
+            return openNativeWithPath(filename, accelerator)
+        }
 
-	public native Location findBookmark(long mark);
-	public native long makeBookmark(int chapter, int page);
-	public long makeBookmark(Location loc) {
-		return makeBookmark(loc.chapter, loc.page);
-	}
+        @JvmStatic fun openDocument(filename: String?, accelerator: SeekableInputStream?): Document {
+            return openNativeWithPathAndStream(filename, accelerator)
+        }
 
-	public static final int PERMISSION_PRINT = (int) 'p';
-	public static final int PERMISSION_COPY = (int) 'c';
-	public static final int PERMISSION_EDIT = (int) 'e';
-	public static final int PERMISSION_ANNOTATE = (int) 'n';
-	public static final int PERMISSION_FORM = (int) 'f';
-	public static final int PERMISSION_ACCESSBILITY = (int) 'y';
-	public static final int PERMISSION_ASSEMBLE = (int) 'a';
-	public static final int PERMISSION_PRINT_HQ = (int) 'h';
+        @JvmStatic fun openDocument(buffer: ByteArray?, magic: String?): Document {
+            return openNativeWithBuffer(magic, buffer, null)
+        }
 
-	public native boolean hasPermission(int permission);
+        @JvmStatic fun openDocument(buffer: ByteArray?, magic: String?, accelerator: ByteArray?): Document {
+            return openNativeWithBuffer(magic, buffer, accelerator)
+        }
 
-	public native boolean isUnencryptedPDF();
+        @JvmStatic fun openDocument(stream: SeekableInputStream?, magic: String?): Document {
+            return openNativeWithStream(magic, stream, null)
+        }
 
-	public native String formatLinkURI(LinkDestination dest);
+        @JvmStatic fun openDocument(
+            stream: SeekableInputStream?,
+            magic: String?,
+            accelerator: SeekableInputStream?
+        ): Document {
+            return openNativeWithStream(magic, stream, accelerator)
+        }
 
-	public boolean isPDF() {
-		return false;
-	}
+        @JvmStatic external fun recognize(magic: String?): Boolean
+        const val PERMISSION_PRINT = 'p'.code
+        const val PERMISSION_COPY = 'c'.code
+        const val PERMISSION_EDIT = 'e'.code
+        const val PERMISSION_ANNOTATE = 'n'.code
+        const val PERMISSION_FORM = 'f'.code
+        const val PERMISSION_ACCESSBILITY = 'y'.code
+        const val PERMISSION_ASSEMBLE = 'a'.code
+        const val PERMISSION_PRINT_HQ = 'h'.code
+    }
 }

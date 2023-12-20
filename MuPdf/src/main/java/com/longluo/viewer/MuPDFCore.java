@@ -39,15 +39,18 @@ public class MuPDFCore
 
 	public MuPDFCore(String filename) {
 		doc = Document.openDocument(filename);
-		doc.layout(layoutW, layoutH, layoutEM);
-		pageCount = doc.countPages();
+		doc.layoutWrap(layoutW, layoutH, layoutEM);
+		pageCount = doc.countPagesOpt(true, (value) -> {
+			pageCount = value;
+			return null;
+		});
 		resolution = 160;
 		currentPage = -1;
 	}
 
 	public MuPDFCore(byte buffer[], String magic) {
 		doc = Document.openDocument(buffer, magic);
-		doc.layout(layoutW, layoutH, layoutEM);
+		doc.layoutWrap(layoutW, layoutH, layoutEM);
 		pageCount = doc.countPages();
 		resolution = 160;
 		currentPage = -1;
@@ -72,9 +75,13 @@ public class MuPDFCore
 			layoutH = h;
 			layoutEM = em;
 			long mark = doc.makeBookmark(doc.locationFromPageNumber(oldPage));
-			doc.layout(layoutW, layoutH, layoutEM);
+			doc.layoutWrap(layoutW, layoutH, layoutEM);
 			currentPage = -1;
-			pageCount = doc.countPages();
+//			pageCount = doc.countPages();
+			pageCount = doc.countPagesOpt(true, (value) -> {
+				pageCount = value;
+				return null;
+			});
 			outline = null;
 			try {
 				outline = doc.loadOutline();

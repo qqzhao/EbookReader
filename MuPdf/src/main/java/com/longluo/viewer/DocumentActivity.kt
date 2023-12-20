@@ -220,7 +220,7 @@ class DocumentActivity : Activity() {
         alert.show()
     }
 
-    suspend fun getLocInfo(): Int = withContext(Dispatchers.IO) {
+    suspend fun getLocInfo(): Int = withContext(Dispatchers.Default) {
         val loc = core!!.layout(mDocView!!.mCurrent, mLayoutW, mLayoutH, mLayoutEM)
         return@withContext loc;
     }

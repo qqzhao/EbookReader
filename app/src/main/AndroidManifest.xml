@@ -149,7 +149,7 @@
 
         <activity
             android:name="com.longluo.viewer.DocumentActivity"
-            android:launchMode="singleInstance" />
+            />
 
         <activity
             android:name="com.longluo.viewer.OutlineActivity"

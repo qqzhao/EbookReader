@@ -120,6 +120,7 @@ class DocumentActivity : Activity() {
      */
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         val metrics = DisplayMetrics()
@@ -195,6 +196,7 @@ class DocumentActivity : Activity() {
             alert.show()
             return
         }
+        restorePref()
         createUI(savedInstanceState)
     }
 
@@ -224,21 +226,27 @@ class DocumentActivity : Activity() {
         val loc = core!!.layout(mDocView!!.mCurrent, mLayoutW, mLayoutH, mLayoutEM)
         return@withContext loc;
     }
-    fun relayoutDocument() {
-        GlobalScope.launch(Dispatchers.Main) {
-            val loc = getLocInfo() //耗时任务，这里会切换到子线程
+    fun relayoutDocument(lastPage: Int?) {
+        val userAsync = true;
+        if (userAsync) {
+            GlobalScope.launch(Dispatchers.Main) {
+                val loc = getLocInfo() //耗时任务，这里会切换到子线程
 
-            mFlatOutline = null
-            mDocView!!.mHistory.clear()
-            mDocView!!.refresh()
-            mDocView!!.displayedViewIndex = loc
+                mFlatOutline = null
+                mDocView!!.mHistory.clear()
+                mDocView!!.refresh()
+                mDocView!!.displayedViewIndex = loc
+                if (lastPage != null) {
+                    mDocView!!.displayedViewIndex = lastPage;
+                }
+            }
+        } else {
+//            val loc = core!!.layout(mDocView!!.mCurrent, mLayoutW, mLayoutH, mLayoutEM)
+//            mFlatOutline = null
+//            mDocView!!.mHistory.clear()
+//            mDocView!!.refresh()
+//            mDocView!!.displayedViewIndex = loc
         }
-
-//        val loc = core!!.layout(mDocView!!.mCurrent, mLayoutW, mLayoutH, mLayoutEM)
-//        mFlatOutline = null
-//        mDocView!!.mHistory.clear()
-//        mDocView!!.refresh()
-//        mDocView!!.displayedViewIndex = loc
     }
 
     private val pageStoreKey get() = "page$mFileKey"
@@ -258,6 +266,7 @@ class DocumentActivity : Activity() {
         mLayoutEM = prefs.getInt(pageFontSizeStoreKey, 10);
         lastPageNum = prefs.getInt(pageStoreKey, 0);
 //        mDocView!!.setDisplayedViewIndex(lastPageNum)
+        Log.d("restorePref", "mLayoutEM = $mLayoutEM, lastPageNum = $lastPageNum")
     }
 
     override fun onPause() {
@@ -297,8 +306,8 @@ class DocumentActivity : Activity() {
                 if (core!!.isReflowable) {
                     mLayoutW = w * 72 / mDisplayDPI
                     mLayoutH = h * 72 / mDisplayDPI
-                    relayoutDocument()
-                    mDocView!!.displayedViewIndex = lastPageNum
+                    relayoutDocument(lastPageNum)
+//                    mDocView!!.displayedViewIndex = lastPageNum
                 } else {
                     refresh()
                 }
@@ -406,18 +415,20 @@ class DocumentActivity : Activity() {
             mLayoutPopupMenu!!.setOnMenuItemClickListener { item ->
                 val oldLayoutEM = mLayoutEM.toFloat()
                 val id = item.itemId
-                if (id == R.id.action_layout_6pt) mLayoutEM =
-                    6 else if (id == R.id.action_layout_7pt) mLayoutEM =
-                    7 else if (id == R.id.action_layout_8pt) mLayoutEM =
-                    8 else if (id == R.id.action_layout_9pt) mLayoutEM =
-                    9 else if (id == R.id.action_layout_10pt) mLayoutEM =
-                    10 else if (id == R.id.action_layout_11pt) mLayoutEM =
-                    11 else if (id == R.id.action_layout_12pt) mLayoutEM =
-                    12 else if (id == R.id.action_layout_13pt) mLayoutEM =
-                    13 else if (id == R.id.action_layout_14pt) mLayoutEM =
-                    14 else if (id == R.id.action_layout_15pt) mLayoutEM =
-                    15 else if (id == R.id.action_layout_16pt) mLayoutEM = 16
-                if (oldLayoutEM != mLayoutEM.toFloat()) relayoutDocument()
+                if (id == R.id.action_layout_6pt) mLayoutEM = 6
+                else if (id == R.id.action_layout_2pt) mLayoutEM = 2
+                else if (id == R.id.action_layout_4pt) mLayoutEM = 4
+                else if (id == R.id.action_layout_7pt) mLayoutEM = 7
+                else if (id == R.id.action_layout_8pt) mLayoutEM = 8
+                else if (id == R.id.action_layout_9pt) mLayoutEM = 9
+                else if (id == R.id.action_layout_10pt) mLayoutEM = 10
+                else if (id == R.id.action_layout_11pt) mLayoutEM = 11
+                else if (id == R.id.action_layout_12pt) mLayoutEM = 12
+                else if (id == R.id.action_layout_13pt) mLayoutEM = 13
+                else if (id == R.id.action_layout_14pt) mLayoutEM = 14
+                else if (id == R.id.action_layout_15pt) mLayoutEM = 15
+                else if (id == R.id.action_layout_16pt) mLayoutEM = 16
+                if (oldLayoutEM != mLayoutEM.toFloat()) relayoutDocument(null)
                 true
             }
             mLayoutButton!!.setOnClickListener { mLayoutPopupMenu!!.show() }
@@ -439,7 +450,6 @@ class DocumentActivity : Activity() {
         }
 
         // Reenstate last state if it was recorded
-        restorePref()
         if (savedInstanceState == null || !savedInstanceState.getBoolean(
                 "ButtonsHidden",
                 false
@@ -483,13 +493,13 @@ class DocumentActivity : Activity() {
     }
 
     public override fun onDestroy() {
-        if (mDocView != null) {
-            mDocView!!.applyToChildren(object : ViewMapper() {
-                public override fun applyToView(view: View) {
-                    (view as PageView).releaseBitmaps()
-                }
-            })
-        }
+//        if (mDocView != null) {
+//            mDocView!!.applyToChildren(object : ViewMapper() {
+//                public override fun applyToView(view: View) {
+//                    (view as PageView).releaseBitmaps()
+//                }
+//            })
+//        }
         if (core != null) core!!.onDestroy()
         core = null
         super.onDestroy()

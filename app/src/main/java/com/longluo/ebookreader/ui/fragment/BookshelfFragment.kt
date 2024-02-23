@@ -27,6 +27,8 @@ class BookshelfFragment : TitleBarFragment<HomeActivity?>() {
 
     //点击书本的位置
     private var itemPosition = 0
+
+    private var useMethod1: Boolean? = null
     override fun getLayoutId(): Int {
         return R.layout.bookshelf_fragment
     }
@@ -74,7 +76,24 @@ class BookshelfFragment : TitleBarFragment<HomeActivity?>() {
                             }.setCancelable(true).show()
                         return
                     }
-                    BookUtils.openBook(activity, bookMeta)
+                    if(useMethod1 == null) {
+                        AlertDialog.Builder(activity)
+                            .setTitle("提示")
+                            .setMessage("是否使用原来的方式？")
+                            .setNegativeButton("方式1") { dialog, which ->
+                                useMethod1 = true;
+                                dialog.dismiss()
+                            }
+                            .setPositiveButton("方式2") { dialog, which ->
+                                useMethod1 = false;
+                            }.setCancelable(true).show()
+                        return
+                    }
+                    if (useMethod1 == true) {
+                        BookUtils.openBook(activity!!, bookMeta)
+                    } else {
+                        BookUtils.openBook2(activity!!, bookMeta)
+                    }
                 }
             }
         })

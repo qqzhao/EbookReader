@@ -38,7 +38,7 @@ import timber.log.Timber;
 
 public class App extends Application {
 
-    private static volatile Context sInstance = null;
+    public static volatile Context sInstance = null;
 
     @Override
     public void onCreate() {

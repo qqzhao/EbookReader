@@ -36,6 +36,8 @@ android {
         buildConfigField('String', 'BUGLY_ID', '"' + BUGLY_ID + '"')
         // 测试服务器的主机地址
         buildConfigField('String', 'HOST_URL', '"' + HOST_URL + '"')
+
+        multiDexEnabled true
     }
 
     // Apk 签名的那些事：https://www.jianshu.com/p/a1f8e5896aa2
@@ -46,6 +48,14 @@ android {
             keyAlias KeyAlias
             keyPassword KeyPassword
         }
+    }
+
+    dexOptions {
+        javaMaxHeapSize "4G"
+    }
+
+    lintOptions {
+        abortOnError false
     }
 
     // 构建配置：https://developer.android.google.cn/studio/build/build-variants
@@ -278,6 +288,10 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.0.1'
 
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.1'
+
+    implementation 'com.github.kaushikgodhani:vocsy_epub_viewer_android_folioreader:V4'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.9.8'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.7'
 
     //implementation 'com.google.android.gms:play-services-ads:20.5.0'
 

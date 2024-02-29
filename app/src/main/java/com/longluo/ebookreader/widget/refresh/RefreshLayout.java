@@ -58,7 +58,7 @@ public class RefreshLayout extends FrameLayout {
         TypedArray typedArray = mContext.obtainStyledAttributes(attrs, R.styleable.RefreshLayout);
         mEmptyViewId = typedArray.getResourceId(R.styleable.RefreshLayout_layout_refresh_empty, R.layout.view_empty);
         mErrorViewId = typedArray.getResourceId(R.styleable.RefreshLayout_layout_refresh_error, R.layout.view_net_error);
-        mLoadingViewId = typedArray.getResourceId(R.styleable.RefreshLayout_layout_refresh_loading, R.layout.view_loading);
+        mLoadingViewId = typedArray.getResourceId(R.styleable.RefreshLayout_layout_refresh_loading, R.layout.view_loading_2);
 
         typedArray.recycle();
     }

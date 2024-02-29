@@ -336,7 +336,7 @@ class BookUtils {
                     true,
                     true
                 )
-                openEpubFile(App.sInstance, filePath, config, "")
+                openEpubFile(activity.applicationContext, filePath, config, "")
                 //            openEpubPdfBook(activity, file);
             } else if (suffix == "mobi" || suffix == "azw" || suffix == "azw3" || suffix == "azw4") {
                 openMobiAzwBook(activity, file)

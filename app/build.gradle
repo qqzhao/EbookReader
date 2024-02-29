@@ -19,7 +19,7 @@ android {
 
         applicationId 'com.longluo.ebookreader'
 
-        ndkVersion '21.4.7075529'
+//        ndkVersion '21.4.7075529'
 
         /** common.gradle中设置为so存放地址为libs，会产生冲突，导致jniLibs无法打包进去。所以为了统一就全部放在libs目录。 */
 /*        ndk {

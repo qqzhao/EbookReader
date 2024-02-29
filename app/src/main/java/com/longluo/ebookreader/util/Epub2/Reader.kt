@@ -142,7 +142,7 @@ class Reader internal constructor(
     }
 
     override fun onFolioReaderClosed() {
-        Log.i("readLocator", "-> saveReadLocator -> " + read_locator!!.toJson())
+//        Log.i("readLocator", "-> saveReadLocator -> " + read_locator!!.toJson())
         //        if (pageEventSink != null) {
 //            pageEventSink.success(read_locator.toJson());
 //        }

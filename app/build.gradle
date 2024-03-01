@@ -167,6 +167,7 @@ dependencies {
     // Libraries封装
     implementation project(':DroidLibrary')
     implementation project(':MuPdf')
+    implementation project(':folioreader')
     // pdf
 
     implementation 'androidx.constraintlayout:constraintlayout:2.1.1'
@@ -289,7 +290,7 @@ dependencies {
 
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.1'
 
-    implementation 'com.github.kaushikgodhani:vocsy_epub_viewer_android_folioreader:V4'
+//    implementation 'com.github.kaushikgodhani:vocsy_epub_viewer_android_folioreader:V4'
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.9.8'
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.7'
 

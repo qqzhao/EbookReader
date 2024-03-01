@@ -66,16 +66,16 @@ class BookshelfFragment : TitleBarFragment<HomeActivity?>() {
                     bookMeta.id = mBooks!![0].id
                     val path = bookMeta.bookPath
                     val file = File(path)
-                    if (!file.exists()) {
-                        AlertDialog.Builder(activity)
-                            .setTitle(activity!!.getString(R.string.app_name))
-                            .setMessage(path + "文件不存在,是否删除该书本？")
-                            .setPositiveButton(R.string.delete) { dialog, which ->
-                                deleteBook(position)
-                                //mShelfAdapter.setmBookList(mBooks);
-                            }.setCancelable(true).show()
-                        return
-                    }
+//                    if (!file.exists()) {
+//                        AlertDialog.Builder(activity)
+//                            .setTitle(activity!!.getString(R.string.app_name))
+//                            .setMessage(path + "文件不存在,是否删除该书本？")
+//                            .setPositiveButton(R.string.delete) { dialog, which ->
+//                                deleteBook(position)
+//                                //mShelfAdapter.setmBookList(mBooks);
+//                            }.setCancelable(true).show()
+//                        return
+//                    }
                     if(useMethod1 == null) {
                         AlertDialog.Builder(activity)
                             .setTitle("提示")
@@ -83,9 +83,11 @@ class BookshelfFragment : TitleBarFragment<HomeActivity?>() {
                             .setNegativeButton("方式1") { dialog, which ->
                                 useMethod1 = true;
                                 dialog.dismiss()
+                                BookUtils.openBook(activity!!, bookMeta)
                             }
                             .setPositiveButton("方式2") { dialog, which ->
-                                useMethod1 = false;
+                                useMethod1 = false
+                                BookUtils.openBook2(activity!!, bookMeta)
                             }.setCancelable(true).show()
                         return
                     }

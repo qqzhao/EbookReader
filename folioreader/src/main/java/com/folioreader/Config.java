@@ -46,7 +46,7 @@ public class Config implements Parcelable {
     private boolean showTextSelection = true;
     private AllowedDirection allowedDirection = DEFAULT_ALLOWED_DIRECTION;
     private Direction direction = DEFAULT_DIRECTION;
-    private boolean showRemainingIndicator = false;
+    private boolean showRemainingIndicator = true;
 
     /**
      * Reading modes available

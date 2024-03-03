@@ -1,6 +1,9 @@
 package com.longluo.ebookreader.util.Epub2
 
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.util.Log
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -11,24 +14,21 @@ import com.folioreader.model.HighLight.HighLightAction
 import com.folioreader.model.locators.ReadLocator
 import com.folioreader.util.OnHighlightListener
 import com.folioreader.util.ReadLocatorListener
+import com.hjq.toast.ToastUtils
+import com.longluo.ebookreader.R
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 
-//import io.flutter.plugin.common.BinaryMessenger;
-//import io.flutter.plugin.common.EventChannel;
-//import io.flutter.plugin.common.MethodChannel;
 class Reader internal constructor(
     private val context: Context,
-    private val readerConfig: ReaderConfig
+    private val readerConfig: ReaderConfig,
+    private val filePath: String,
 ) : OnHighlightListener, ReadLocatorListener, OnClosedListener {
     var folioReader: FolioReader
 
-    //    public MethodChannel.Result result;
-    //    private EventChannel eventChannel;
-    //    private EventChannel.EventSink pageEventSink;
-    //    private BinaryMessenger messenger;
     private var read_locator: ReadLocator? = null
+    private var lastLocation: String? = null
 
     init {
         highlightsAndSave
@@ -37,19 +37,22 @@ class Reader internal constructor(
             .setOnHighlightListener(this)
             .setReadLocatorListener(this)
             .setOnClosedListener(this)
-        //        pageEventSink = sink;
+        restorePref()
     }
 
-    fun open(bookPath: String, lastLocation: String?) {
+    @SuppressLint("LogNotTimber")
+    fun open(bookPath: String) {
+        ToastUtils.show("准备打开文档")
         Thread {
             try {
                 Log.i("SavedLocation", "-> savedLocation -> $lastLocation")
-                if (lastLocation != null && !lastLocation.isEmpty()) {
+                if (lastLocation != null && !lastLocation!!.isEmpty()) {
                     val readLocator = ReadLocator.fromJson(lastLocation)
                     folioReader.setReadLocator(readLocator)
-                }
+
                 folioReader.setConfig(readerConfig.config, true)
                     .openBook(bookPath)
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -58,38 +61,8 @@ class Reader internal constructor(
 
     fun close() {
         folioReader.close()
-    }//You can do anything on successful saving highlight list
+    }
 
-    //    private void setPageHandler(BinaryMessenger messenger) {
-    ////        final MethodChannel channel = new MethodChannel(registrar.messenger(), "page");
-    ////        channel.setMethodCallHandler(new EpubKittyPlugin());
-    //        Log.i("event sink is", "in set page handler:");
-    //        eventChannel = new EventChannel(messenger, PAGE_CHANNEL);
-    //
-    //        try {
-    //
-    //            eventChannel.setStreamHandler(new EventChannel.StreamHandler() {
-    //
-    //                @Override
-    //                public void onListen(Object o, EventChannel.EventSink eventSink) {
-    //
-    //                    Log.i("event sink is", "this is eveent sink:");
-    //
-    //                    pageEventSink = eventSink;
-    //                    if (pageEventSink == null) {
-    //                        Log.i("empty", "Sink is empty");
-    //                    }
-    //                }
-    //
-    //                @Override
-    //                public void onCancel(Object o) {
-    //
-    //                }
-    //            });
-    //        } catch (Error err) {
-    //            Log.i("and error", "error is " + err.toString());
-    //        }
-    //    }
     val highlightsAndSave: Unit
         get() {
             Thread {
@@ -114,6 +87,7 @@ class Reader internal constructor(
             }.start()
         }
 
+    @SuppressLint("LogNotTimber")
     private fun loadAssetTextAsString(name: String): String? {
         var `in`: BufferedReader? = null
         try {
@@ -142,10 +116,33 @@ class Reader internal constructor(
     }
 
     override fun onFolioReaderClosed() {
-//        Log.i("readLocator", "-> saveReadLocator -> " + read_locator!!.toJson())
-        //        if (pageEventSink != null) {
-//            pageEventSink.success(read_locator.toJson());
-//        }
+        Log.i("readLocator", "-> saveReadLocator -> " + read_locator!!.toJson())
+        storePref()
+        ToastUtils.show("存储进度成功")
+        folioReader.close()
+    }
+
+    private val pageStoreKey get() = "page_$filePath"
+    private val pageFontSizeStoreKey get() = "font_size_$filePath"
+    private fun storePref() {
+        read_locator?.toJson()?.let {
+            val prefs = (context as Activity).getPreferences(MODE_PRIVATE)
+            val edit = prefs.edit()
+            edit.putString(pageStoreKey, it)
+//        edit.putInt(pageFontSizeStoreKey, mLayoutEM)
+            edit.apply()
+        }
+    }
+
+    @SuppressLint("LogNotTimber")
+    private fun restorePref() {
+        val prefs = (context as Activity).getPreferences(MODE_PRIVATE)
+//        mLayoutEM = prefs.getInt(pageFontSizeStoreKey, 10);
+        val lastLocationTmp = prefs.getString(pageStoreKey, null);
+        lastLocationTmp?.let {
+            lastLocation = it
+            Log.d("restorePref", "lastLocation = $lastLocation")
+        }
     }
 
     override fun onHighlight(highlight: HighLight, type: HighLightAction) {}
@@ -158,9 +155,9 @@ class Reader internal constructor(
         private var curReader: Reader? = null;
 
         fun openEpubFile(context: Context, filePath: String, config: ReaderConfig, lastLocation: String?) {
-            val reader = Reader(context, config)
-            curReader = reader;
-            reader.open(filePath, null)
+            val reader = Reader(context, config, filePath)
+            curReader = reader
+            reader.open(filePath)
         }
 
         fun closeReader() {

@@ -1,11 +1,13 @@
 package com.longluo.ebookreader.ui.fragment
 
 import android.app.AlertDialog
+import android.content.Intent
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.folioreader.ui.activity.Folio2Activity
 import com.longluo.ebookreader.R
 import com.longluo.ebookreader.app.TitleBarFragment
 import com.longluo.ebookreader.db.BookMark
@@ -76,22 +78,30 @@ class BookshelfFragment : TitleBarFragment<HomeActivity?>() {
                             }.setCancelable(true).show()
                         return
                     }
-                    if(useMethod1 == null) {
-                        AlertDialog.Builder(activity)
-                            .setTitle("提示")
-                            .setMessage("是否使用原来的方式？")
-                            .setNegativeButton("方式1") { dialog, which ->
-                                useMethod1 = true;
-                                dialog.dismiss()
-                                BookUtils.openBook(activity!!, bookMeta)
-                            }
-                            .setPositiveButton("方式2") { dialog, which ->
-                                useMethod1 = false
-                                BookUtils.openBook2(activity!!, bookMeta)
-                            }.setCancelable(true).show()
-                        return
+//                    if(useMethod1 == null) {
+//                        AlertDialog.Builder(activity)
+//                            .setTitle("提示")
+//                            .setMessage("是否使用原来的方式？")
+//                            .setNegativeButton("方式1") { dialog, which ->
+//                                useMethod1 = true;
+//                                dialog.dismiss()
+//                                BookUtils.openBook(activity!!, bookMeta)
+//                            }
+//                            .setPositiveButton("方式2") { dialog, which ->
+//                                useMethod1 = false
+//                                BookUtils.openBook2(activity!!, bookMeta)
+//                            }.setCancelable(true).show()
+//                        return
+//                    }
+
+                    if (position == 0) {
+                        val intent = Intent(activity, Folio2Activity::class.java);
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        activity?.startActivity(intent)
+                        return;
                     }
-                    if (useMethod1 == true) {
+
+                    if (useMethod1 == true && false) {
                         BookUtils.openBook(activity!!, bookMeta)
                     } else {
                         BookUtils.openBook2(activity!!, bookMeta)

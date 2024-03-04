@@ -48,6 +48,10 @@ class HomeActivity : AppActivity(), NavigationAdapter.OnNavigationListener {
         return R.layout.home_activity
     }
 
+    override fun isStatusBarEnabled() : Boolean{
+        return true;
+    }
+
     override fun initView() {
         mViewPager = findViewById(R.id.vp_home_pager)
         mNavigationView = findViewById(R.id.rv_home_navigation)

@@ -117,8 +117,8 @@ class ConfigBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
     val view_config_ib_day_mode get() = myView.findViewById<ImageButton>(R.id.view_config_ib_day_mode);
     val view_config_ib_night_mode get() = myView.findViewById<ImageButton>(R.id.view_config_ib_night_mode);
-    val buttonHorizontal get() = myView.findViewById<StyleableTextView>(R.id.buttonHorizontal);
-    val buttonVertical get() = myView.findViewById<StyleableTextView>(R.id.buttonVertical);
+    val buttonHorizontal get() = myView.findViewById<com.folioreader.util.StyleableTextView>(R.id.buttonHorizontal);
+    val buttonVertical get() = myView.findViewById<com.folioreader.util.StyleableTextView>(R.id.buttonVertical);
 
     private fun inflateView() {
 

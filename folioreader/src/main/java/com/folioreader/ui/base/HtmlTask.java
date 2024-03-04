@@ -34,7 +34,7 @@ public class HtmlTask extends AsyncTask<String, Void, String> {
     protected String doInBackground(String... urls) {
         String strUrl = urls[0];
         try {
-            String newStr = URLEncoder.encode(strUrl);
+//            String newStr = URLEncoder.encode(strUrl);
             URL url = new URL(strUrl);
             URLConnection urlConnection = url.openConnection();
             InputStream inputStream = urlConnection.getInputStream();

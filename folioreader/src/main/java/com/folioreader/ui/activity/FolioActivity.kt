@@ -40,6 +40,7 @@ import android.view.*
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -95,7 +96,8 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
     private var appBarLayout: FolioAppBarLayout? = null
     private var toolbar: Toolbar? = null
     private var createdMenu: Menu? = null
-    private var distractionFreeMode: Boolean = false
+    private var distractionFreeMode: Boolean = false // 之前：控制是否显示// 控制是否显示
+    private var forceShowToolBar: Boolean = true // 现在：控制是否显示// 控制是否显示
     private var handler: Handler? = null
 
     private var currentChapterIndex: Int = 0
@@ -297,6 +299,10 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
 
         val pageCountTextView = findViewById<TextView>(R.id.pageCount)
 
+        pageCountTextView.setOnClickListener {
+            toggleActionBarSelf()
+        }
+
         // pageTrackerViewModel
         pageTrackerViewModel = ViewModelProvider(
             this, PageTrackerViewModelFactory()
@@ -320,6 +326,10 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
         } else {
             setupBook()
         }
+
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+//            window.setDecorFitsSystemWindows(false)
+//        }
     }
 
     private fun initActionBar() {
@@ -827,9 +837,13 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
 
         distractionFreeMode = visibility != View.SYSTEM_UI_FLAG_VISIBLE
         Log.v(LOG_TAG, "-> distractionFreeMode = $distractionFreeMode")
+        toggleActionBarSelf();
+    }
 
+    private fun toggleActionBarSelf() {
+        forceShowToolBar = !forceShowToolBar;
         if (actionBar != null) {
-            if (distractionFreeMode) {
+            if (!forceShowToolBar) {
                 actionBar!!.hide()
             } else {
                 actionBar!!.show()
@@ -838,7 +852,6 @@ class FolioActivity : AppCompatActivity(), FolioActivityCallback, MediaControlle
     }
 
     override fun toggleSystemUI() {
-
         if (distractionFreeMode) {
             showSystemUI()
         } else {

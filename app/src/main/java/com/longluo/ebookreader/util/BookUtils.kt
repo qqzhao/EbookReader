@@ -5,8 +5,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Environment
 import android.text.TextUtils
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.FragmentActivity
-import com.longluo.ebookreader.App
 import com.longluo.ebookreader.bean.Cache
 import com.longluo.ebookreader.db.BookContent
 import com.longluo.ebookreader.db.BookMeta
@@ -322,6 +322,7 @@ class BookUtils {
         fun openBook2(activity: FragmentActivity, bookMeta: BookMeta) {
             val filePath = bookMeta.bookPath
             val file = File(filePath)
+//            val nightMode = AppCompatDelegate.getDefaultNightMode() ==
             val suffix = FileUtils.getSuffix(filePath)
             Timber.d("openBook: filePath=$filePath, suffix=$suffix")
             if (suffix == "txt") {
@@ -334,7 +335,7 @@ class BookUtils {
                     "alldirections",
                     true,
                     true,
-                    true
+                    false
                 )
                 openEpubFile(activity, filePath, config, "")
                 //            openEpubPdfBook(activity, file);
